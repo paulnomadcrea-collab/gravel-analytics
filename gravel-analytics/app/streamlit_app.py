@@ -430,7 +430,18 @@ div[data-testid="stTabs"] button[data-baseweb="tab"] {
     .trend-tag.up { background: #064e3b; color: #6ee7b7; }
     .trend-tag.flat { background: #1f2937; color: #9ca3af; }
     .trend-tag.down { background: #450a0a; color: #fca5a5; }
+    .nutrition-notes { background: #111827; border-radius: 8px; padding: 0.6rem; margin-top: 0.5rem; font-size: 0.82rem; color: #d1d5db; }
 }
+
+/* -------- Nutrition advice details -------- */
+.nutrition-advice-block { margin-top: 1rem; }
+.nutrition-advice-block .advice-line { margin: 0.3rem 0; font-size: 0.9rem; }
+.nutrition-advice-block .advice-line strong { font-weight: 600; }
+.nutrition-advice-block .advice-list { margin: 0.2rem 0 0.6rem; padding-left: 1.2rem; }
+.nutrition-advice-block .advice-list li { margin: 0.15rem 0; font-size: 0.88rem; }
+.nutrition-notes { background: #fffbeb; border-radius: 8px; padding: 0.6rem; margin-top: 0.8rem; font-size: 0.82rem; }
+.nutrition-notes ul { margin: 0.2rem 0 0; padding-left: 1.2rem; }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -941,7 +952,7 @@ with tab_coach:
                             <div class="stat-label">Régularité</div>
                         </div>
                     </div>
-                    <p style="margin: 0.6rem 0 0; font-size: 0.82rem; color: #6b7280;">{report.consistency_comment}</p>
+                    <div style="margin: 0.6rem 0 0; font-size: 0.82rem; color: #6b7280;">{report.consistency_comment}</div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -968,7 +979,7 @@ with tab_coach:
 
             trend_details_html = ""
             for detail in report.trend_details:
-                trend_details_html += f"<p style='margin: 0.3rem 0;'>{detail}</p>"
+                trend_details_html += f"<div style='margin: 0.3rem 0;'>{detail}</div>"
 
             st.markdown(f"""
             <div class="coach-card">
@@ -987,38 +998,30 @@ with tab_coach:
 
         # ── Zones de puissance ──
         if report.zone_distribution:
-            zone_bars = ""
             zone_colors = {
                 "Z1": "#93c5fd", "Z2": "#86efac", "Z3": "#fde047",
                 "Z4": "#fdba74", "Z5": "#fca5a5", "Z6": "#f87171", "Z7": "#ef4444"
             }
+            zone_parts = []
             for zone_name, pct in sorted(report.zone_distribution.items()):
                 z_key = zone_name.split(" ")[0]
                 color = zone_colors.get(z_key, "#94a3b8")
-                zone_bars += f"""
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem;">
-                    <div style="width: 110px; font-size: 0.78rem; font-weight: 500; color: #6b7280; text-align: right;">{zone_name}</div>
-                    <div style="flex: 1; background: #f3f4f6; border-radius: 6px; height: 22px; overflow: hidden;">
-                        <div style="width: {min(100, pct):.0f}%; height: 100%; background: {color}; border-radius: 6px;
-                             display: flex; align-items: center; padding-left: 6px; font-size: 0.72rem; font-weight: 600; color: #1f2937;">
-                            {pct:.0f}%
-                        </div>
-                    </div>
-                </div>
-                """
+                zone_parts.append(
+                    f'<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;">'
+                    f'<div style="width:110px;font-size:0.78rem;font-weight:500;color:#6b7280;text-align:right;">{zone_name}</div>'
+                    f'<div style="flex:1;background:#f3f4f6;border-radius:6px;height:22px;overflow:hidden;">'
+                    f'<div style="width:{min(100, pct):.0f}%;height:100%;background:{color};border-radius:6px;'
+                    f'display:flex;align-items:center;padding-left:6px;font-size:0.72rem;font-weight:600;color:#1f2937;">'
+                    f'{pct:.0f}%</div></div></div>'
+                )
+            zone_bars = "".join(zone_parts)
 
-            st.markdown(f"""
-            <div class="coach-card">
-                <div class="coach-card-header">
-                    <span class="icon">🎯</span>
-                    <h4>Distribution des zones</h4>
-                </div>
-                <div class="coach-card-body">
-                    {zone_bars}
-                    <p style="margin: 0.8rem 0 0; font-size: 0.82rem;">{report.zone_comment or ""}</p>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"""<div class="coach-card">
+<div class="coach-card-header"><span class="icon">🎯</span><h4>Distribution des zones</h4></div>
+<div class="coach-card-body">
+{zone_bars}
+<div style="margin:0.8rem 0 0;font-size:0.82rem;">{report.zone_comment or ""}</div>
+</div></div>""", unsafe_allow_html=True)
 
         # ── Recommandations d'entraînement ──
         recs_html = ""
@@ -1057,62 +1060,47 @@ with tab_coach:
                         <div class="stat-label">Sodium</div>
                     </div>
                 </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-                <div style="margin-top: 1rem;">
-                    <p style="margin: 0.3rem 0;"><strong>🍳 Avant :</strong> {na.pre_ride_meal}</p>
-                    <p style="margin: 0.6rem 0 0.2rem;"><strong>🚴 Pendant :</strong></p>
-                    <ul style="margin: 0.2rem 0 0.6rem; padding-left: 1.2rem;">{during_items}</ul>
-                    <p style="margin: 0.3rem 0;"><strong>🥗 Après :</strong> {na.post_ride}</p>
-                </div>
-                {"<div style='margin-top: 0.8rem; padding: 0.6rem; background: #fffbeb; border-radius: 8px; font-size: 0.82rem;'><strong>💡 Notes :</strong><ul style='margin: 0.2rem 0 0; padding-left: 1.2rem;'>" + notes_items + "</ul></div>" if notes_items else ""}
+        # Advice details as separate markdown call to avoid rendering issues
+        notes_html = f'<div class="nutrition-notes"><strong>💡 Notes :</strong><ul>{"".join(f"<li>{note}</li>" for note in na.notes)}</ul></div>' if na.notes else ""
+        st.markdown(f"""
+        <div class="coach-card" style="margin-top: -0.5rem; border-top: none; border-top-left-radius: 0; border-top-right-radius: 0;">
+            <div class="coach-card-body nutrition-advice-block">
+                <div class="advice-line"><strong>🍳 Avant :</strong> {na.pre_ride_meal}</div>
+                <div class="advice-line"><strong>🚴 Pendant :</strong></div>
+                <ul class="advice-list">{during_items}</ul>
+                <div class="advice-line"><strong>🥗 Après :</strong> {na.post_ride}</div>
+                {notes_html}
             </div>
         </div>
         """, unsafe_allow_html=True)
 
         # ── Tableau nutrition par sortie récente ──
         if report.ride_specific_nutrition:
-            rows_html = ""
+            import html as html_mod
+            rows = []
             for rn in reversed(report.ride_specific_nutrition):
-                rows_html += f"""
-                <tr>
-                    <td>{rn['date']}</td>
-                    <td>{rn['name'][:30]}</td>
-                    <td>{rn['duration_h']:.1f}h</td>
-                    <td>{rn['intensity']}</td>
-                    <td><strong>{rn['calories_estimated']:,}</strong> kcal</td>
-                    <td>{rn['carbs_needed_g']}g</td>
-                    <td>{rn['water_needed_l']}L</td>
-                </tr>
-                """
+                name_safe = html_mod.escape(rn['name'][:30])
+                rows.append(
+                    f"<tr><td>{rn['date']}</td><td>{name_safe}</td>"
+                    f"<td>{rn['duration_h']:.1f}h</td><td>{rn['intensity']}</td>"
+                    f"<td><strong>{rn['calories_estimated']:,}</strong> kcal</td>"
+                    f"<td>{rn['carbs_needed_g']}g</td><td>{rn['water_needed_l']}L</td></tr>"
+                )
+            rows_html = "".join(rows)
 
-            st.markdown(f"""
-            <div class="coach-card">
-                <div class="coach-card-header">
-                    <span class="icon">📋</span>
-                    <h4>Besoins nutritionnels — 5 dernières sorties</h4>
-                </div>
-                <div class="coach-card-body">
-                    <table class="nutrition-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Sortie</th>
-                                <th>Durée</th>
-                                <th>Intensité</th>
-                                <th>Calories</th>
-                                <th>Glucides</th>
-                                <th>Eau</th>
-                            </tr>
-                        </thead>
-                        <tbody>{rows_html}</tbody>
-                    </table>
-                    <p style="margin: 0.6rem 0 0; font-size: 0.78rem; color: #9ca3af;">
-                        Estimations basées sur la durée et la puissance moyenne. Les besoins réels varient
-                        selon la température, l'humidité, et ton métabolisme individuel.
-                    </p>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"""<div class="coach-card">
+<div class="coach-card-header"><span class="icon">📋</span><h4>Besoins nutritionnels — 5 dernières sorties</h4></div>
+<div class="coach-card-body">
+<table class="nutrition-table">
+<thead><tr><th>Date</th><th>Sortie</th><th>Durée</th><th>Intensité</th><th>Calories</th><th>Glucides</th><th>Eau</th></tr></thead>
+<tbody>{rows_html}</tbody>
+</table>
+<div style="margin: 0.6rem 0 0; font-size: 0.78rem; color: #9ca3af;">Estimations basées sur la durée et la puissance moyenne. Les besoins réels varient selon la température, l'humidité, et ton métabolisme individuel.</div>
+</div></div>""", unsafe_allow_html=True)
 
         st.caption(
             f"Rapport généré le {report.generated_at.strftime('%d/%m/%Y à %H:%M')} · "
