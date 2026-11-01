@@ -306,16 +306,25 @@ n_indoor = len(df_indoor)
 n_zwift = len(df_zwift)
 
 # ───────────────────────── Plotly theme ─────────────────────────
-PLOTLY_LAYOUT = dict(
+PLOTLY_BASE = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
     font=dict(family="Inter, sans-serif", color="#e6e9ef", size=12),
     margin=dict(l=40, r=20, t=30, b=40),
-    xaxis=dict(gridcolor="rgba(255,255,255,0.06)", zerolinecolor="rgba(255,255,255,0.06)"),
-    yaxis=dict(gridcolor="rgba(255,255,255,0.06)", zerolinecolor="rgba(255,255,255,0.06)"),
-    legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11)),
     hoverlabel=dict(bgcolor="#1a1d24", font_size=12, font_family="Inter"),
 )
+_GRID = "rgba(255,255,255,0.06)"
+_LEGEND = dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11))
+
+
+def plotly_layout(**overrides):
+    """Build a Plotly layout dict merging base style with overrides."""
+    layout = dict(**PLOTLY_BASE)
+    layout.setdefault("xaxis", dict(gridcolor=_GRID, zerolinecolor=_GRID))
+    layout.setdefault("yaxis", dict(gridcolor=_GRID, zerolinecolor=_GRID))
+    layout.setdefault("legend", dict(**_LEGEND))
+    layout.update(overrides)
+    return layout
 
 COL_OUTDOOR = "#34d399"
 COL_INDOOR = "#f59e0b"
@@ -388,7 +397,7 @@ with tab_perf:
                                          line=dict(color=COL_ACCENT, width=2), fill="tozeroy",
                                          fillcolor="rgba(167,139,250,0.08)"))
             fig_pmc.add_hline(y=0, line_dash="dash", line_color="rgba(255,255,255,0.15)")
-            fig_pmc.update_layout(**PLOTLY_LAYOUT, height=340, legend=dict(orientation="h", y=1.12))
+            fig_pmc.update_layout(**plotly_layout(height=340, legend=dict(orientation="h", y=1.12, bgcolor="rgba(0,0,0,0)")))
             st.plotly_chart(fig_pmc, use_container_width=True)
         else:
             st.info("Pas assez de données TSS pour le graphique PMC.")
@@ -414,7 +423,7 @@ with tab_perf:
                                  annotation_text=f"Objectif {z2_goal}W")
                 fig_z2.add_hline(y=z2_baseline, line_dash="dot", line_color="rgba(255,255,255,0.2)",
                                  annotation_text=f"Baseline {z2_baseline}W")
-                fig_z2.update_layout(**PLOTLY_LAYOUT, height=260)
+                fig_z2.update_layout(**plotly_layout(height=260))
                 st.plotly_chart(fig_z2, use_container_width=True)
         with col_z2b:
             pct = z2["pct_to_goal"] or 0
@@ -437,7 +446,7 @@ with tab_perf:
                             tickvals=[5, 10, 30, 60, 300, 600, 1200, 3600],
                             ticktext=["5s", "10s", "30s", "1m", "5m", "10m", "20m", "1h"])
         fig_pc.update_yaxes(title="Watts")
-        fig_pc.update_layout(**PLOTLY_LAYOUT, height=300)
+        fig_pc.update_layout(**plotly_layout(height=300))
         st.plotly_chart(fig_pc, use_container_width=True)
 
     # ── Weekly volume ──
@@ -456,9 +465,9 @@ with tab_perf:
         if not subset.empty:
             fig_vol.add_trace(go.Bar(x=subset["week_start"], y=subset["hours"],
                                      name=label, marker_color=color))
-    fig_vol.update_layout(**PLOTLY_LAYOUT, barmode="stack", height=280,
+    fig_vol.update_layout(**plotly_layout(barmode="stack", height=280,
                           legend=dict(orientation="h", y=1.12),
-                          yaxis_title="Heures")
+                          yaxis_title="Heures"))
     st.plotly_chart(fig_vol, use_container_width=True)
 
 
@@ -508,7 +517,7 @@ with tab_indoor:
                     mode="lines", name="Tendance (14j)",
                     line=dict(color=COL_ACCENT, width=2, dash="dot"),
                 ))
-            fig_wpkg.update_layout(**PLOTLY_LAYOUT, height=300, yaxis_title="W/kg")
+            fig_wpkg.update_layout(**plotly_layout(height=300, yaxis_title="W/kg"))
             st.plotly_chart(fig_wpkg, use_container_width=True)
         else:
             st.info("Pas de données de puissance pour les sessions indoor.")
@@ -526,8 +535,8 @@ with tab_indoor:
             ))
             fig_dist.add_vline(x=ftp, line_dash="dash", line_color=COL_ACCENT,
                                annotation_text=f"FTP ({ftp}W)")
-            fig_dist.update_layout(**PLOTLY_LAYOUT, height=250,
-                                   xaxis_title="Puissance moyenne (W)", yaxis_title="Nombre")
+            fig_dist.update_layout(**plotly_layout(height=250,
+                                   xaxis_title="Puissance moyenne (W)", yaxis_title="Nombre"))
             st.plotly_chart(fig_dist, use_container_width=True)
 
         # ── Recent indoor rides table ──
@@ -592,8 +601,8 @@ with tab_compare:
             sub = monthly[monthly["category"] == cat]
             if not sub.empty:
                 fig_cmp.add_trace(go.Bar(x=sub["month"], y=sub["avg_w"], name=label, marker_color=color))
-        fig_cmp.update_layout(**PLOTLY_LAYOUT, barmode="group", height=300,
-                              yaxis_title="Puissance moy. (W)")
+        fig_cmp.update_layout(**plotly_layout(barmode="group", height=300,
+                              yaxis_title="Puissance moy. (W)"))
         st.plotly_chart(fig_cmp, use_container_width=True)
 
         # ── Duration split ──
@@ -609,7 +618,7 @@ with tab_compare:
             textinfo="label+percent",
             textfont=dict(size=13),
         ))
-        fig_pie.update_layout(**PLOTLY_LAYOUT, height=300, showlegend=False)
+        fig_pie.update_layout(**plotly_layout(height=300, showlegend=False))
         st.plotly_chart(fig_pie, use_container_width=True)
 
 
@@ -881,7 +890,7 @@ with tab_coach:
                 marker_color=[COL_OUTDOOR, COL_OUTDOOR, COL_INDOOR, COL_ACCENT,
                               "#ef4444", "#ef4444", "#ef4444"][:len(zone_df)],
             ))
-            fig_zones.update_layout(**PLOTLY_LAYOUT, height=220, xaxis_title="% du temps")
+            fig_zones.update_layout(**plotly_layout(height=220, xaxis_title="% du temps"))
             st.plotly_chart(fig_zones, use_container_width=True)
             if report.zone_comment:
                 st.markdown(report.zone_comment)
