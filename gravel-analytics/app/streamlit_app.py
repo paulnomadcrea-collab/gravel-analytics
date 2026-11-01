@@ -22,6 +22,7 @@ from analysis import (
     zone_bounds_watts,
 )
 from sync import sync_recent
+from garmin_sync import login_step1, login_step2_mfa
 
 st.set_page_config(page_title="Gravel Analytics", page_icon="🚵", layout="wide")
 
@@ -38,13 +39,83 @@ baseline_z2 = st.sidebar.number_input("Niveau de départ Z2 (W)", value=220, ste
 
 days_back = st.sidebar.slider("Historique à synchroniser (jours)", 30, 730, 365, step=30)
 
+# ------------------------------------------------------ Sync avec MFA ------
+# Initialisation du session_state pour le flux MFA
+if "mfa_state" not in st.session_state:
+    st.session_state.mfa_state = None  # None = pas en cours, dict = en attente de code
+if "sync_done" not in st.session_state:
+    st.session_state.sync_done = False
+if "sync_message" not in st.session_state:
+    st.session_state.sync_message = None
+
+# Bouton de synchronisation
 if st.sidebar.button("🔄 Synchroniser avec Garmin Connect", use_container_width=True):
-    with st.spinner("Récupération des activités depuis Garmin Connect..."):
+    st.session_state.sync_done = False
+    st.session_state.sync_message = None
+
+    with st.spinner("Connexion à Garmin Connect..."):
         try:
-            n = sync_recent(days_back=days_back, ftp=ftp)
-            st.sidebar.success(f"{n} activité(s) synchronisée(s).")
+            status, client, client_state = login_step1()
+
+            if status == "needs_mfa":
+                # MFA requis — sauvegarder l'état pour le formulaire
+                st.session_state.mfa_state = {
+                    "client": client,
+                    "client_state": client_state,
+                }
+                st.sidebar.info(
+                    "🔐 Garmin a envoyé un code de vérification par email. "
+                    "Saisis-le ci-dessous."
+                )
+            else:
+                # Connecté sans MFA (tokens valides)
+                with st.spinner("Récupération des activités..."):
+                    n = sync_recent(days_back=days_back, ftp=ftp, client=client)
+                st.session_state.sync_done = True
+                st.session_state.sync_message = ("success", f"{n} activité(s) synchronisée(s).")
+
         except Exception as e:
-            st.sidebar.error(f"Échec de synchro : {e}")
+            st.session_state.sync_message = ("error", f"Échec de synchro : {e}")
+
+# Formulaire MFA (affiché tant que mfa_state est actif)
+if st.session_state.mfa_state is not None:
+    with st.sidebar.form("mfa_form"):
+        st.write("🔐 **Validation en 2 étapes**")
+        mfa_code = st.text_input(
+            "Code de vérification",
+            placeholder="123456",
+            help="Code reçu par email ou SMS de Garmin.",
+        )
+        submitted = st.form_submit_button("Valider le code", use_container_width=True)
+
+        if submitted and mfa_code:
+            try:
+                client = login_step2_mfa(
+                    st.session_state.mfa_state["client"],
+                    st.session_state.mfa_state["client_state"],
+                    mfa_code.strip(),
+                )
+                st.session_state.mfa_state = None  # MFA terminé
+
+                with st.spinner("Récupération des activités..."):
+                    n = sync_recent(days_back=days_back, ftp=ftp, client=client)
+                st.session_state.sync_done = True
+                st.session_state.sync_message = ("success", f"{n} activité(s) synchronisée(s).")
+
+            except Exception as e:
+                st.session_state.sync_message = ("error", f"Échec : {e}")
+                # Garder mfa_state pour permettre une nouvelle tentative
+                # sauf si c'est une erreur de login
+                if "connexion" in str(e).lower() or "authentication" in str(e).lower():
+                    st.session_state.mfa_state = None
+
+# Afficher le message de résultat
+if st.session_state.sync_message:
+    msg_type, msg_text = st.session_state.sync_message
+    if msg_type == "success":
+        st.sidebar.success(msg_text)
+    else:
+        st.sidebar.error(msg_text)
 
 st.sidebar.divider()
 st.sidebar.caption(
