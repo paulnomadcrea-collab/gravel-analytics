@@ -354,21 +354,31 @@ def _ride_nutrition_summary(ride: RideSummary, ftp: float) -> dict:
     water_max = advice.water_per_hour_ml[1] * ride.duration_h / 1000
 
     # Calories brûlées estimées
-    if ride.avg_power_w:
-        calories_estimated = ride.avg_power_w * ride.duration_h * 3600 / 1000 / 0.25
-    elif ride.calories:
+    import math
+    if ride.avg_power_w and not math.isnan(ride.avg_power_w):
+        calories_estimated = ride.avg_power_w * (ride.duration_h or 0) * 3600 / 1000 / 0.25
+    elif ride.calories and not math.isnan(ride.calories):
         calories_estimated = ride.calories
     else:
-        calories_estimated = ride.duration_h * 600
+        calories_estimated = (ride.duration_h or 0) * 600
+
+    # Sécuriser contre NaN/None avant conversion en int
+    def _safe_int(v, default=0):
+        try:
+            if v is None or (isinstance(v, float) and math.isnan(v)):
+                return default
+            return int(v)
+        except (ValueError, TypeError):
+            return default
 
     return {
         "date": ride.date.strftime("%d/%m/%Y"),
         "name": ride.name,
         "duration_h": ride.duration_h,
         "intensity": intensity,
-        "calories_estimated": int(calories_estimated),
-        "carbs_needed_g": f"{int(carb_min)}–{int(carb_max)}",
-        "water_needed_l": f"{water_min:.1f}–{water_max:.1f}",
+        "calories_estimated": _safe_int(calories_estimated),
+        "carbs_needed_g": f"{_safe_int(carb_min)}–{_safe_int(carb_max)}",
+        "water_needed_l": f"{water_min:.1f}–{water_max:.1f}" if water_min == water_min and water_max == water_max else "0.0–0.0",
         "category": advice.duration_category,
     }
 
