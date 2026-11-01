@@ -24,6 +24,7 @@ def get_conn() -> sqlite3.Connection:
         """
         CREATE TABLE IF NOT EXISTS activities (
             activity_id INTEGER PRIMARY KEY,
+            source TEXT DEFAULT 'garmin',
             start_time TEXT,
             name TEXT,
             activity_type TEXT,
@@ -45,6 +46,12 @@ def get_conn() -> sqlite3.Connection:
         )
         """
     )
+    # Migration : ajouter la colonne source si elle n'existe pas encore
+    cursor = conn.execute("PRAGMA table_info(activities)")
+    columns = {row[1] for row in cursor}
+    if "source" not in columns:
+        conn.execute("ALTER TABLE activities ADD COLUMN source TEXT DEFAULT 'garmin'")
+        conn.commit()
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS power_curve (
@@ -60,18 +67,22 @@ def get_conn() -> sqlite3.Connection:
 
 
 def upsert_activity(conn: sqlite3.Connection, a: dict) -> None:
+    # S'assurer que source est toujours présent
+    if "source" not in a:
+        a["source"] = "garmin"
     conn.execute(
         """
         INSERT INTO activities (
-            activity_id, start_time, name, activity_type, distance_m, duration_s,
+            activity_id, source, start_time, name, activity_type, distance_m, duration_s,
             elevation_gain_m, avg_speed_kmh, max_speed_kmh, avg_power_w, max_power_w,
             normalized_power_w, avg_hr, max_hr, calories, training_load, tss,
             avg_z2_power_w, raw_json
-        ) VALUES (:activity_id, :start_time, :name, :activity_type, :distance_m, :duration_s,
+        ) VALUES (:activity_id, :source, :start_time, :name, :activity_type, :distance_m, :duration_s,
             :elevation_gain_m, :avg_speed_kmh, :max_speed_kmh, :avg_power_w, :max_power_w,
             :normalized_power_w, :avg_hr, :max_hr, :calories, :training_load, :tss,
             :avg_z2_power_w, :raw_json)
         ON CONFLICT(activity_id) DO UPDATE SET
+            source=excluded.source,
             start_time=excluded.start_time, name=excluded.name,
             activity_type=excluded.activity_type, distance_m=excluded.distance_m,
             duration_s=excluded.duration_s, elevation_gain_m=excluded.elevation_gain_m,
