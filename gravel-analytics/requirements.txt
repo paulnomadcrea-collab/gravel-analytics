@@ -1,0 +1,6 @@
+streamlit>=1.38
+garminconnect>=0.2.20
+garth>=0.5
+pandas>=2.0
+numpy>=1.24
+plotly>=5.20
