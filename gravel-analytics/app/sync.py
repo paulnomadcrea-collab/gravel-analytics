@@ -53,12 +53,17 @@ def _extract_summary(a: dict) -> dict:
     }
 
 
-def sync_recent(days_back: int = 365, ftp: float = 250.0, fetch_detail: bool = True) -> int:
+def sync_recent(days_back: int = 365, ftp: float = 250.0, fetch_detail: bool = True, client=None) -> int:
     """Synchronise les activités des `days_back` derniers jours. Retourne le
-    nombre d'activités nouvellement ajoutées ou mises à jour."""
+    nombre d'activités nouvellement ajoutées ou mises à jour.
+
+    Si `client` est fourni, il est utilisé directement (utile quand le flux
+    MFA a déjà produit un client authentifié). Sinon, get_client() est appelé.
+    """
     import json
 
-    client = get_client()
+    if client is None:
+        client = get_client()
     conn = db.get_conn()
 
     start = dt.date.today() - dt.timedelta(days=days_back)
