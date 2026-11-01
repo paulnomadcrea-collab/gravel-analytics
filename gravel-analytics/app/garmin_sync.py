@@ -25,7 +25,10 @@ from garminconnect import Garmin, GarminConnectAuthenticationError
 TOKEN_DIR = Path(os.environ.get("GARMIN_TOKEN_DIR", str(Path.home() / ".garminconnect")))
 TOKEN_FILE = TOKEN_DIR / "tokens.json"
 
-GRAVEL_KEYWORDS = ("gravel", "cycling", "road_biking", "mountain_biking")
+GRAVEL_KEYWORDS = (
+    "gravel", "cycling", "road_biking", "mountain_biking",
+    "virtual_ride", "indoor_cycling", "indoor_biking", "stationary_cycling",
+)
 
 
 def _get_credentials() -> tuple[str, str]:

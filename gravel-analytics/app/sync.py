@@ -62,7 +62,7 @@ def _extract_summary(a: dict) -> dict:
     }
 
 
-def sync_recent(days_back: int = 365, ftp: float = 250.0, fetch_detail: bool = True, client=None) -> int:
+def sync_recent(days_back: int = 365, ftp: float = 250.0, fetch_detail: bool = True, client=None, weight_kg: float = 75.0) -> int:
     """Synchronise les activités des `days_back` derniers jours. Retourne le
     nombre d'activités nouvellement ajoutées ou mises à jour.
 
@@ -83,6 +83,11 @@ def sync_recent(days_back: int = 365, ftp: float = 250.0, fetch_detail: bool = T
         row = _extract_summary(a)
         row["source"] = "garmin"
         row["raw_json"] = json.dumps(a)
+        row["category"] = db.detect_category(row)
+        if row.get("avg_power_w") and weight_kg > 0:
+            row["watts_per_kg"] = round(row["avg_power_w"] / weight_kg, 2)
+        else:
+            row["watts_per_kg"] = None
 
         if fetch_detail:
             try:
@@ -166,6 +171,7 @@ def sync_strava(
     days_back: int = 365,
     ftp: float = 250.0,
     fetch_detail: bool = True,
+    weight_kg: float = 75.0,
 ) -> int:
     """Synchronise les activités Strava des `days_back` derniers jours.
 
@@ -186,6 +192,11 @@ def sync_strava(
     for a in activities:
         row = _extract_strava_summary(a)
         row["raw_json"] = json.dumps(a)
+        row["category"] = db.detect_category(row)
+        if row.get("avg_power_w") and weight_kg > 0:
+            row["watts_per_kg"] = round(row["avg_power_w"] / weight_kg, 2)
+        else:
+            row["watts_per_kg"] = None
 
         if fetch_detail and a.get("device_watts", False):
             # Uniquement si l'activité a des données de puissance réelles
