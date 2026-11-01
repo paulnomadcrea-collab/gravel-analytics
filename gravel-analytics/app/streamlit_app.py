@@ -21,6 +21,7 @@ from analysis import (
     z2_progress,
     zone_bounds_watts,
 )
+from coach import generate_coach_report
 from sync import sync_recent
 from garmin_sync import login_step1, login_step2_mfa
 
@@ -210,6 +211,193 @@ div[data-testid="stTabs"] button[data-baseweb="tab"] {
     }
 }
 
+/* -------- Coach IA — Strava-inspired cards -------- */
+.coach-score-ring {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #fc4c02 0%, #e8450e 100%);
+    border-radius: 16px;
+    color: white;
+    margin-bottom: 1rem;
+}
+.coach-score-ring .score-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 4px solid rgba(255,255,255,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+.coach-score-ring .score-number {
+    font-family: 'Inter', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+.coach-score-ring .score-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.9;
+}
+.coach-score-ring .score-summary {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    opacity: 0.95;
+}
+
+.coach-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 1.2rem;
+    margin-bottom: 0.75rem;
+    transition: box-shadow 0.15s;
+}
+.coach-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+.coach-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+.coach-card-header .icon {
+    font-size: 1.3rem;
+}
+.coach-card-header h4 {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+.coach-card-body {
+    font-size: 0.88rem;
+    color: #4b5563;
+    line-height: 1.65;
+}
+
+.coach-stat-row {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+.coach-stat {
+    flex: 1 1 120px;
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 0.8rem 0.7rem;
+    text-align: center;
+}
+.coach-stat .stat-value {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #111827;
+}
+.coach-stat .stat-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 0.15rem;
+}
+.coach-stat .stat-unit {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.fitness-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+.fitness-badge.green { background: #ecfdf5; color: #065f46; }
+.fitness-badge.yellow { background: #fffbeb; color: #92400e; }
+.fitness-badge.orange { background: #fff7ed; color: #9a3412; }
+.fitness-badge.red { background: #fef2f2; color: #991b1b; }
+
+.coach-rec {
+    padding: 0.7rem 1rem;
+    border-left: 3px solid #fc4c02;
+    background: #fff7ed;
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: #4b5563;
+    line-height: 1.55;
+}
+
+.nutrition-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.82rem;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+.nutrition-table th {
+    background: #f9fafb;
+    padding: 0.6rem 0.7rem;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.nutrition-table td {
+    padding: 0.55rem 0.7rem;
+    border-top: 1px solid #f3f4f6;
+    color: #4b5563;
+}
+.nutrition-table tr:hover td {
+    background: #fef7f0;
+}
+
+.trend-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+.trend-tag.up { background: #ecfdf5; color: #065f46; }
+.trend-tag.flat { background: #f3f4f6; color: #6b7280; }
+.trend-tag.down { background: #fef2f2; color: #991b1b; }
+
+.coach-section-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #fc4c02;
+    margin: 1.2rem 0 0.5rem;
+}
+
 /* -------- Dark mode -------- */
 @media (prefers-color-scheme: dark) {
     .kpi-card { background: #1e293b; border-color: #334155; }
@@ -222,6 +410,26 @@ div[data-testid="stTabs"] button[data-baseweb="tab"] {
     .empty-state p { color: #94a3b8; }
     .info-callout { background: #422006; border-color: #92400e; color: #fde68a; }
     .period-badge { background: #1e293b; color: #94a3b8; }
+
+    .coach-card { background: #1e293b; border-color: #334155; }
+    .coach-card-header { border-bottom-color: #334155; }
+    .coach-card-header h4 { color: #f1f5f9; }
+    .coach-card-body { color: #d1d5db; }
+    .coach-stat { background: #111827; }
+    .coach-stat .stat-value { color: #f9fafb; }
+    .coach-stat .stat-label { color: #6b7280; }
+    .coach-rec { background: #422006; border-left-color: #fc4c02; color: #fde68a; }
+    .nutrition-table th { background: #111827; color: #d1d5db; }
+    .nutrition-table td { border-top-color: #334155; color: #d1d5db; }
+    .nutrition-table tr:hover td { background: #1a1a2e; }
+    .nutrition-table { border-color: #334155; }
+    .fitness-badge.green { background: #064e3b; color: #6ee7b7; }
+    .fitness-badge.yellow { background: #422006; color: #fcd34d; }
+    .fitness-badge.orange { background: #431407; color: #fb923c; }
+    .fitness-badge.red { background: #450a0a; color: #fca5a5; }
+    .trend-tag.up { background: #064e3b; color: #6ee7b7; }
+    .trend-tag.flat { background: #1f2937; color: #9ca3af; }
+    .trend-tag.down { background: #450a0a; color: #fca5a5; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -396,7 +604,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------- Tabs ----
-tab_perf, tab_speed, tab_rides = st.tabs(["⚡ Performance", "🏔️ Vitesse & dénivelé", "📋 Sorties"])
+tab_perf, tab_speed, tab_rides, tab_coach = st.tabs(["⚡ Performance", "🏔️ Vitesse & dénivelé", "📋 Sorties", "🧠 Coach IA"])
 
 # =============================== TAB 1 : Performance ========================
 with tab_perf:
@@ -624,3 +832,289 @@ with tab_rides:
         },
     )
     st.caption(f"{len(pretty)} sortie(s) affichée(s)")
+
+# =============================== TAB 4 : Coach IA =====================
+with tab_coach:
+    coach_period = st.select_slider(
+        "Période d'analyse",
+        options=[7, 14, 28, 60, 90],
+        value=28,
+        format_func=lambda x: f"{x} jours",
+    )
+
+    report = generate_coach_report(df, ftp=ftp, period_days=coach_period)
+
+    if report is None:
+        st.markdown("""
+        <div class="empty-state">
+            <div class="icon">🧠</div>
+            <p><strong>Pas assez de données</strong></p>
+            <p>Le coach a besoin d'au moins quelques sorties sur la période sélectionnée pour générer un rapport.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        # ── Score global + résumé (bannière Strava-style) ──
+        st.markdown(f"""
+        <div class="coach-score-ring">
+            <div class="score-circle">
+                <div class="score-number">{report.overall_score}</div>
+                <div class="score-label">Score</div>
+            </div>
+            <div class="score-summary">{report.summary}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # ── 2 colonnes : État de forme + Volume ──
+        col_fitness, col_volume = st.columns(2)
+
+        with col_fitness:
+            badge_class = "green"
+            if report.fitness_emoji == "🟡":
+                badge_class = "yellow"
+            elif report.fitness_emoji == "🟠":
+                badge_class = "orange"
+            elif report.fitness_emoji == "🔴":
+                badge_class = "red"
+
+            ctl_str = f"{report.ctl:.0f}" if report.ctl else "—"
+            atl_str = f"{report.atl:.0f}" if report.atl else "—"
+            tsb_str = f"{report.tsb:+.0f}" if report.tsb is not None else "—"
+
+            st.markdown(f"""
+            <div class="coach-card">
+                <div class="coach-card-header">
+                    <span class="icon">💪</span>
+                    <h4>État de forme</h4>
+                </div>
+                <div class="coach-card-body">
+                    <div style="margin-bottom: 0.8rem;">
+                        <span class="fitness-badge {badge_class}">{report.fitness_emoji} {report.fitness_status}</span>
+                    </div>
+                    <p style="margin: 0 0 0.8rem;">{report.fitness_detail}</p>
+                    <div class="coach-stat-row">
+                        <div class="coach-stat">
+                            <div class="stat-value">{ctl_str}</div>
+                            <div class="stat-label">CTL (fitness)</div>
+                        </div>
+                        <div class="coach-stat">
+                            <div class="stat-value">{atl_str}</div>
+                            <div class="stat-label">ATL (fatigue)</div>
+                        </div>
+                        <div class="coach-stat">
+                            <div class="stat-value">{tsb_str}</div>
+                            <div class="stat-label">TSB (forme)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col_volume:
+            st.markdown(f"""
+            <div class="coach-card">
+                <div class="coach-card-header">
+                    <span class="icon">📊</span>
+                    <h4>Volume & régularité</h4>
+                </div>
+                <div class="coach-card-body">
+                    <div class="coach-stat-row">
+                        <div class="coach-stat">
+                            <div class="stat-value">{report.weekly_hours_avg:.1f}<span class="stat-unit">h</span></div>
+                            <div class="stat-label">Heures / sem.</div>
+                        </div>
+                        <div class="coach-stat">
+                            <div class="stat-value">{report.weekly_km_avg:.0f}<span class="stat-unit">km</span></div>
+                            <div class="stat-label">Km / sem.</div>
+                        </div>
+                        <div class="coach-stat">
+                            <div class="stat-value">{report.rides_per_week_avg:.1f}</div>
+                            <div class="stat-label">Sorties / sem.</div>
+                        </div>
+                    </div>
+                    <div class="coach-stat-row" style="margin-top: 0.4rem;">
+                        <div class="coach-stat">
+                            <div class="stat-value">{report.weekly_elevation_avg:.0f}<span class="stat-unit">m</span></div>
+                            <div class="stat-label">D+ / sem.</div>
+                        </div>
+                        <div class="coach-stat">
+                            <div class="stat-value">{report.consistency_score}</div>
+                            <div class="stat-label">Régularité</div>
+                        </div>
+                    </div>
+                    <p style="margin: 0.6rem 0 0; font-size: 0.82rem; color: #6b7280;">{report.consistency_comment}</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # ── Tendances ──
+        if report.trend_details:
+            def _trend_class(label):
+                if "progression" in (label or "").lower() or "↗" in (label or ""):
+                    return "up"
+                elif "baisse" in (label or "").lower() or "↘" in (label or ""):
+                    return "down"
+                return "flat"
+
+            trend_tags = ""
+            if report.power_trend:
+                tc = _trend_class(report.power_trend)
+                trend_tags += f'<span class="trend-tag {tc}">⚡ Puissance {report.power_trend}</span> '
+            if report.speed_trend:
+                tc = _trend_class(report.speed_trend)
+                trend_tags += f'<span class="trend-tag {tc}">💨 Vitesse {report.speed_trend}</span> '
+            if report.hr_trend:
+                tc = _trend_class(report.hr_trend)
+                trend_tags += f'<span class="trend-tag {tc}">❤️ FC {report.hr_trend}</span> '
+
+            trend_details_html = ""
+            for detail in report.trend_details:
+                trend_details_html += f"<p style='margin: 0.3rem 0;'>{detail}</p>"
+
+            st.markdown(f"""
+            <div class="coach-card">
+                <div class="coach-card-header">
+                    <span class="icon">📈</span>
+                    <h4>Tendances de performance</h4>
+                </div>
+                <div class="coach-card-body">
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.8rem;">
+                        {trend_tags}
+                    </div>
+                    {trend_details_html}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # ── Zones de puissance ──
+        if report.zone_distribution:
+            zone_bars = ""
+            zone_colors = {
+                "Z1": "#93c5fd", "Z2": "#86efac", "Z3": "#fde047",
+                "Z4": "#fdba74", "Z5": "#fca5a5", "Z6": "#f87171", "Z7": "#ef4444"
+            }
+            for zone_name, pct in sorted(report.zone_distribution.items()):
+                z_key = zone_name.split(" ")[0]
+                color = zone_colors.get(z_key, "#94a3b8")
+                zone_bars += f"""
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem;">
+                    <div style="width: 110px; font-size: 0.78rem; font-weight: 500; color: #6b7280; text-align: right;">{zone_name}</div>
+                    <div style="flex: 1; background: #f3f4f6; border-radius: 6px; height: 22px; overflow: hidden;">
+                        <div style="width: {min(100, pct):.0f}%; height: 100%; background: {color}; border-radius: 6px;
+                             display: flex; align-items: center; padding-left: 6px; font-size: 0.72rem; font-weight: 600; color: #1f2937;">
+                            {pct:.0f}%
+                        </div>
+                    </div>
+                </div>
+                """
+
+            st.markdown(f"""
+            <div class="coach-card">
+                <div class="coach-card-header">
+                    <span class="icon">🎯</span>
+                    <h4>Distribution des zones</h4>
+                </div>
+                <div class="coach-card-body">
+                    {zone_bars}
+                    <p style="margin: 0.8rem 0 0; font-size: 0.82rem;">{report.zone_comment or ""}</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # ── Recommandations d'entraînement ──
+        recs_html = ""
+        for rec in report.training_recommendations:
+            recs_html += f'<div class="coach-rec">{rec}</div>'
+
+        st.markdown(f"""
+        <div class="coach-section-label">Recommandations entraînement</div>
+        {recs_html}
+        """, unsafe_allow_html=True)
+
+        # ── Nutrition & Hydratation ──
+        na = report.nutrition_advice
+        during_items = "".join(f"<li>{item}</li>" for item in na.during_ride)
+        notes_items = "".join(f"<li>{note}</li>" for note in na.notes) if na.notes else ""
+
+        st.markdown(f"""
+        <div class="coach-section-label">Nutrition & hydratation</div>
+        <div class="coach-card">
+            <div class="coach-card-header">
+                <span class="icon">🍌</span>
+                <h4>Plan nutrition — sorties {na.duration_category}</h4>
+            </div>
+            <div class="coach-card-body">
+                <div class="coach-stat-row">
+                    <div class="coach-stat">
+                        <div class="stat-value">{na.carbs_per_hour_g[0]}–{na.carbs_per_hour_g[1]}<span class="stat-unit">g/h</span></div>
+                        <div class="stat-label">Glucides</div>
+                    </div>
+                    <div class="coach-stat">
+                        <div class="stat-value">{na.water_per_hour_ml[0]}–{na.water_per_hour_ml[1]}<span class="stat-unit">ml/h</span></div>
+                        <div class="stat-label">Hydratation</div>
+                    </div>
+                    <div class="coach-stat">
+                        <div class="stat-value">{na.electrolytes_mg_sodium_h[0]}–{na.electrolytes_mg_sodium_h[1]}<span class="stat-unit">mg/h</span></div>
+                        <div class="stat-label">Sodium</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <p style="margin: 0.3rem 0;"><strong>🍳 Avant :</strong> {na.pre_ride_meal}</p>
+                    <p style="margin: 0.6rem 0 0.2rem;"><strong>🚴 Pendant :</strong></p>
+                    <ul style="margin: 0.2rem 0 0.6rem; padding-left: 1.2rem;">{during_items}</ul>
+                    <p style="margin: 0.3rem 0;"><strong>🥗 Après :</strong> {na.post_ride}</p>
+                </div>
+                {"<div style='margin-top: 0.8rem; padding: 0.6rem; background: #fffbeb; border-radius: 8px; font-size: 0.82rem;'><strong>💡 Notes :</strong><ul style='margin: 0.2rem 0 0; padding-left: 1.2rem;'>" + notes_items + "</ul></div>" if notes_items else ""}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # ── Tableau nutrition par sortie récente ──
+        if report.ride_specific_nutrition:
+            rows_html = ""
+            for rn in reversed(report.ride_specific_nutrition):
+                rows_html += f"""
+                <tr>
+                    <td>{rn['date']}</td>
+                    <td>{rn['name'][:30]}</td>
+                    <td>{rn['duration_h']:.1f}h</td>
+                    <td>{rn['intensity']}</td>
+                    <td><strong>{rn['calories_estimated']:,}</strong> kcal</td>
+                    <td>{rn['carbs_needed_g']}g</td>
+                    <td>{rn['water_needed_l']}L</td>
+                </tr>
+                """
+
+            st.markdown(f"""
+            <div class="coach-card">
+                <div class="coach-card-header">
+                    <span class="icon">📋</span>
+                    <h4>Besoins nutritionnels — 5 dernières sorties</h4>
+                </div>
+                <div class="coach-card-body">
+                    <table class="nutrition-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Sortie</th>
+                                <th>Durée</th>
+                                <th>Intensité</th>
+                                <th>Calories</th>
+                                <th>Glucides</th>
+                                <th>Eau</th>
+                            </tr>
+                        </thead>
+                        <tbody>{rows_html}</tbody>
+                    </table>
+                    <p style="margin: 0.6rem 0 0; font-size: 0.78rem; color: #9ca3af;">
+                        Estimations basées sur la durée et la puissance moyenne. Les besoins réels varient
+                        selon la température, l'humidité, et ton métabolisme individuel.
+                    </p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.caption(
+            f"Rapport généré le {report.generated_at.strftime('%d/%m/%Y à %H:%M')} · "
+            f"{report.rides_analyzed} sortie(s) analysée(s) sur {report.period_days} jours"
+        )
