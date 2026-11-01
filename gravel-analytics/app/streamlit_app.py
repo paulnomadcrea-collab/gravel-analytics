@@ -855,7 +855,7 @@ with tab_coach:
                 <div style="font-size:2rem;">{report.fitness_emoji}</div>
                 <div style="font-size:1.1rem;font-weight:700;color:var(--text-primary);">{report.fitness_status}</div>
                 <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;">
-                    CTL {report.ctl:.0f if report.ctl else 'N/A'} · ATL {report.atl:.0f if report.atl else 'N/A'} · TSB {report.tsb:+.0f if report.tsb else 'N/A'}
+                    CTL {report.ctl:.0f if report.ctl and report.ctl == report.ctl else 'N/A'} · ATL {report.atl:.0f if report.atl and report.atl == report.atl else 'N/A'} · TSB {report.tsb:+.0f if report.tsb and report.tsb == report.tsb else 'N/A'}
                 </div>
             </div>
             """, unsafe_allow_html=True)
