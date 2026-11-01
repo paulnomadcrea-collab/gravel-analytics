@@ -22,10 +22,26 @@ from analysis import (
     zone_bounds_watts,
 )
 from coach import generate_coach_report
-from sync import sync_recent
+from sync import sync_recent, sync_strava
 from garmin_sync import login_step1, login_step2_mfa
+import strava_sync
 
 st.set_page_config(page_title="Gravel Analytics", page_icon="🚵", layout="wide")
+
+# --------------------------------------------------------- Strava OAuth callback --
+# Strava redirige vers l'app avec ?code=xxx&scope=... après autorisation
+_strava_code = st.query_params.get("code")
+_strava_scope = st.query_params.get("scope", "")
+if _strava_code and "activity:read" in _strava_scope:
+    try:
+        tokens = strava_sync.exchange_code(_strava_code)
+        st.session_state["strava_just_connected"] = True
+        # Nettoyer les query params pour éviter de ré-échanger le code
+        st.query_params.clear()
+        st.rerun()
+    except Exception as e:
+        st.error(f"Échec de la connexion Strava : {e}")
+        st.query_params.clear()
 
 # ---------------------------------------------------------------- CSS ----
 st.markdown("""
@@ -442,6 +458,20 @@ div[data-testid="stTabs"] button[data-baseweb="tab"] {
 .nutrition-notes { background: #fffbeb; border-radius: 8px; padding: 0.6rem; margin-top: 0.8rem; font-size: 0.82rem; }
 .nutrition-notes ul { margin: 0.2rem 0 0; padding-left: 1.2rem; }
 
+/* -------- Strava connect button -------- */
+.strava-btn {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: #fc4c02; color: white; padding: 0.5rem 1rem;
+    border-radius: 6px; text-decoration: none; font-weight: 600;
+    font-size: 0.85rem; transition: background 0.2s;
+}
+.strava-btn:hover { background: #e04402; color: white; }
+.strava-connected {
+    display: flex; align-items: center; gap: 0.4rem;
+    color: #10b981; font-size: 0.85rem; font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -554,6 +584,80 @@ with st.sidebar:
         "ou secrets Streamlit — jamais saisis ici."
     )
 
+    # ---------------------------------------------------- Strava sync ------
+    st.markdown("## 🔶 Strava")
+
+    # Vérifier si les credentials Strava sont configurés
+    _strava_available = False
+    try:
+        strava_sync._get_credentials()
+        _strava_available = True
+    except RuntimeError:
+        pass
+
+    if _strava_available:
+        if strava_sync.is_connected():
+            # Afficher le message de connexion réussie si on vient de se connecter
+            if st.session_state.get("strava_just_connected"):
+                st.success("✅ Strava connecté avec succès !")
+                st.session_state["strava_just_connected"] = False
+
+            st.markdown('<div class="strava-connected">✅ Strava connecté</div>', unsafe_allow_html=True)
+
+            # Initialiser l'état de synchro Strava
+            if "strava_sync_message" not in st.session_state:
+                st.session_state.strava_sync_message = None
+
+            if st.button("🔄 Synchroniser Strava", use_container_width=True, type="primary"):
+                st.session_state.strava_sync_message = None
+                with st.spinner("Synchronisation Strava..."):
+                    try:
+                        token = strava_sync.get_valid_token()
+                        if token:
+                            n = sync_strava(access_token=token, days_back=days_back, ftp=ftp)
+                            st.session_state.strava_sync_message = ("success", f"✅ {n} activité(s) Strava synchronisée(s).")
+                        else:
+                            st.session_state.strava_sync_message = ("error", "Token expiré. Reconnecte-toi à Strava.")
+                            strava_sync.disconnect()
+                    except Exception as e:
+                        st.session_state.strava_sync_message = ("error", f"Échec : {e}")
+
+            if st.session_state.get("strava_sync_message"):
+                msg_type, msg_text = st.session_state.strava_sync_message
+                if msg_type == "success":
+                    st.success(msg_text)
+                else:
+                    st.error(msg_text)
+
+            if st.button("❌ Déconnecter Strava", use_container_width=True):
+                strava_sync.disconnect()
+                st.rerun()
+        else:
+            # Bouton de connexion OAuth2
+            # Construire l'URL de redirection (l'app elle-même)
+            _redirect_uri = st.query_params.get("redirect_uri", "")
+            if not _redirect_uri:
+                # Sur Streamlit Cloud, utiliser l'URL de base
+                import urllib.parse
+                # Fallback : URL de la page courante sans query params
+                _redirect_uri = "https://gravel-analytics.streamlit.app/"
+
+            auth_url = strava_sync.get_auth_url(_redirect_uri)
+            st.markdown(
+                f'<a href="{auth_url}" class="strava-btn" target="_self">'
+                f'🔶 Connecter Strava</a>',
+                unsafe_allow_html=True,
+            )
+            st.caption("Autorise l'accès en lecture à tes activités Strava.")
+    else:
+        st.info(
+            "Pour activer Strava, configure `STRAVA_CLIENT_ID` et "
+            "`STRAVA_CLIENT_SECRET` dans les secrets Streamlit.",
+            icon="ℹ️",
+        )
+
+    st.divider()
+
 # ------------------------------------------------------------------- Data --
 df = db.load_activities_df()
 
@@ -561,7 +665,7 @@ df = db.load_activities_df()
 st.markdown("""
 <div class="hero">
     <h1>🚵 Gravel Analytics</h1>
-    <p>Tableau de bord de performance — données Garmin Connect</p>
+    <p>Tableau de bord de performance — données Garmin Connect & Strava</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -570,7 +674,7 @@ if df.empty:
     <div class="empty-state">
         <div class="icon">📡</div>
         <p><strong>Aucune activité en base</strong></p>
-        <p>Ouvre le menu latéral et clique sur <em>Synchroniser</em> pour importer tes sorties Garmin.</p>
+        <p>Ouvre le menu latéral et clique sur <em>Synchroniser</em> pour importer tes sorties Garmin ou Strava.</p>
     </div>
     """, unsafe_allow_html=True)
     st.stop()
