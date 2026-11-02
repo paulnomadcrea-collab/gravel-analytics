@@ -48,43 +48,90 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --bg-primary: #0e1117;
-    --bg-card: #1a1d24;
-    --bg-card-hover: #22262e;
-    --border: #2d3139;
-    --text-primary: #e6e9ef;
-    --text-secondary: #9ca3b0;
-    --accent-blue: #4a9eff;
-    --accent-green: #34d399;
-    --accent-orange: #f59e0b;
-    --accent-red: #ef4444;
-    --accent-purple: #a78bfa;
-    --accent-cyan: #22d3ee;
+    --bg-primary: #f8fafc;
+    --bg-gradient: linear-gradient(to right bottom, #f8fafc, #f1f5f9);
+    --bg-card: rgba(255,255,255,0.95);
+    --bg-card-hover: #ffffff;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --accent-orange: #ea580c;
+    --accent-green: #16a34a;
+    --accent-blue: #2563eb;
+    --accent-red: #dc2626;
+    --accent-purple: #7c3aed;
+    --accent-cyan: #0891b2;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.10);
 }
 
 html, body, [class*="st-"] {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
-/* Sidebar */
-section[data-testid="stSidebar"] {
-    background: var(--bg-card);
-    border-right: 1px solid var(--border);
+/* Global light background */
+.stApp, .main .block-container {
+    background: var(--bg-gradient) !important;
+    color: var(--text-primary);
 }
 
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background: #ffffff !important;
+    border-right: 1px solid var(--border);
+}
+section[data-testid="stSidebar"] > div {
+    background: #ffffff !important;
+}
+section[data-testid="stSidebar"] .stMarkdown h2 {
+    color: var(--text-primary) !important;
+    font-weight: 800;
+}
 section[data-testid="stSidebar"] .stMarkdown h3 {
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--text-secondary);
-    margin: 1.2rem 0 0.5rem;
+    color: var(--text-muted);
+    margin: 1.4rem 0 0.5rem;
+    font-weight: 600;
+}
+section[data-testid="stSidebar"] label {
+    color: var(--text-secondary) !important;
+    font-weight: 500;
+}
+
+/* Sidebar inputs */
+section[data-testid="stSidebar"] input,
+section[data-testid="stSidebar"] select,
+section[data-testid="stSidebar"] .stSelectbox > div > div {
+    background: #f8fafc !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    color: var(--text-primary) !important;
+}
+
+/* Sidebar buttons */
+section[data-testid="stSidebar"] .stButton > button {
+    background: var(--text-primary) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    padding: 0.5rem 1rem !important;
+    transition: opacity 0.2s;
+}
+section[data-testid="stSidebar"] .stButton > button:hover {
+    opacity: 0.85;
 }
 
 /* KPI cards */
 .kpi-row {
     display: flex;
-    gap: 12px;
-    margin-bottom: 1rem;
+    gap: 14px;
+    margin-bottom: 1.2rem;
     flex-wrap: wrap;
 }
 .kpi-card {
@@ -92,28 +139,33 @@ section[data-testid="stSidebar"] .stMarkdown h3 {
     min-width: 140px;
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 18px;
-    transition: border-color 0.2s;
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s, transform 0.2s;
 }
-.kpi-card:hover { border-color: var(--accent-blue); }
+.kpi-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
 .kpi-label {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 600;
 }
 .kpi-value {
-    font-size: 1.6rem;
-    font-weight: 700;
+    font-size: 1.7rem;
+    font-weight: 800;
     color: var(--text-primary);
     line-height: 1.1;
 }
 .kpi-sub {
     font-size: 0.75rem;
     color: var(--text-secondary);
-    margin-top: 2px;
+    margin-top: 4px;
 }
 
 /* Category badges */
@@ -122,20 +174,20 @@ section[data-testid="stSidebar"] .stMarkdown h3 {
     font-size: 0.68rem;
     font-weight: 600;
     letter-spacing: 0.04em;
-    padding: 2px 8px;
+    padding: 3px 10px;
     border-radius: 999px;
     text-transform: uppercase;
 }
-.cat-outdoor { background: rgba(52,211,153,0.15); color: #34d399; }
-.cat-indoor { background: rgba(245,158,11,0.15); color: #f59e0b; }
-.cat-zwift { background: rgba(74,158,255,0.15); color: #4a9eff; }
+.cat-outdoor { background: #dcfce7; color: #15803d; }
+.cat-indoor { background: #fef3c7; color: #b45309; }
+.cat-zwift { background: #dbeafe; color: #1d4ed8; }
 
 /* Section header */
 .section-header {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin: 1.5rem 0 0.8rem;
+    margin: 1.8rem 0 0.8rem;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -148,42 +200,117 @@ section[data-testid="stSidebar"] .stMarkdown h3 {
 .stTabs [data-baseweb="tab-list"] {
     gap: 0;
     background: var(--bg-card);
-    border-radius: 10px;
-    padding: 3px;
+    border-radius: 12px;
+    padding: 4px;
     border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
 }
 .stTabs [data-baseweb="tab"] {
-    border-radius: 8px;
+    border-radius: 9px;
     font-weight: 600;
     font-size: 0.82rem;
-    padding: 8px 16px;
+    padding: 8px 18px;
+    color: var(--text-secondary);
 }
 .stTabs [aria-selected="true"] {
-    background: var(--accent-blue) !important;
+    background: var(--text-primary) !important;
     color: white !important;
+}
+
+/* General buttons */
+.stButton > button {
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    border: 1px solid var(--border) !important;
+    background: white !important;
+    color: var(--text-primary) !important;
+    transition: all 0.2s;
+}
+.stButton > button:hover {
+    background: #f8fafc !important;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Dataframe styling */
+.stDataFrame {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
 }
 
 /* Training plan card */
 .plan-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
+    border-radius: 14px;
+    padding: 16px 20px;
     margin-bottom: 10px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s;
 }
-.plan-card.done { opacity: 0.6; border-left: 3px solid var(--accent-green); }
-.plan-card.today { border-left: 3px solid var(--accent-blue); }
-.plan-card.future { border-left: 3px solid var(--border); }
+.plan-card:hover { box-shadow: var(--shadow-md); }
+.plan-card.done { opacity: 0.55; border-left: 4px solid var(--accent-green); }
+.plan-card.today { border-left: 4px solid var(--accent-orange); background: #fff7ed; }
+.plan-card.future { border-left: 4px solid var(--border); }
+
+/* Progress bar */
+.stProgress > div > div {
+    background: var(--accent-orange) !important;
+}
+
+/* Metric styling */
+[data-testid="stMetric"] {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    box-shadow: var(--shadow-sm);
+}
+[data-testid="stMetricLabel"] {
+    color: var(--text-muted) !important;
+}
+[data-testid="stMetricValue"] {
+    color: var(--text-primary) !important;
+    font-weight: 800 !important;
+}
+
+/* Expander styling */
+.streamlit-expanderHeader {
+    background: var(--bg-card) !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+}
 
 /* Plotly overrides */
 .js-plotly-plot .plotly .modebar { display: none !important; }
+
+/* Info boxes */
+.stAlert {
+    border-radius: 12px !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Multiselect / selectbox */
+.stMultiSelect > div > div,
+.stSelectbox > div > div {
+    border-radius: 10px !important;
+}
+
+/* Text input */
+.stTextInput input {
+    border-radius: 10px !important;
+    border: 1px solid var(--border) !important;
+    background: white !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ───────────────────────── Sidebar — Réglages ─────────────────────────
 with st.sidebar:
     st.markdown("## 🚵 Gravel Analytics")
-    st.caption("Dashboard vélo indoor & outdoor")
+    st.caption("Dashboard vélo gravel · indoor & outdoor")
 
     st.markdown("### Profil")
     ftp = st.number_input("FTP (watts)", 100, 500, int(st.session_state.get("ftp", 250)), step=5, key="ftp_input")
@@ -270,7 +397,7 @@ with st.sidebar:
             st.info("Strava nécessite un abonnement payant pour l'accès API depuis juin 2026.")
 
     st.markdown("---")
-    st.caption("v2.0 · Indoor/Outdoor/Zwift")
+    st.caption("v2.1 · Indoor/Outdoor/Zwift")
 
 # ───────────────────────── Load data ─────────────────────────
 df = db.load_activities_df()
@@ -309,12 +436,12 @@ n_zwift = len(df_zwift)
 PLOTLY_BASE = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="Inter, sans-serif", color="#e6e9ef", size=12),
+    font=dict(family="Inter, sans-serif", color="#334155", size=12),
     margin=dict(l=40, r=20, t=30, b=40),
-    hoverlabel=dict(bgcolor="#1a1d24", font_size=12, font_family="Inter"),
+    hoverlabel=dict(bgcolor="#ffffff", bordercolor="#e2e8f0", font_size=12, font_family="Inter", font_color="#0f172a"),
 )
-_GRID = "rgba(255,255,255,0.06)"
-_LEGEND = dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11))
+_GRID = "rgba(0,0,0,0.06)"
+_LEGEND = dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11, color="#64748b"))
 
 
 def plotly_layout(**overrides):
@@ -326,10 +453,10 @@ def plotly_layout(**overrides):
     layout.update(overrides)
     return layout
 
-COL_OUTDOOR = "#34d399"
-COL_INDOOR = "#f59e0b"
-COL_ZWIFT = "#4a9eff"
-COL_ACCENT = "#a78bfa"
+COL_OUTDOOR = "#16a34a"
+COL_INDOOR = "#ea580c"
+COL_ZWIFT = "#2563eb"
+COL_ACCENT = "#7c3aed"
 
 # ───────────────────────── KPI row ─────────────────────────
 total_dist = df["distance_km"].sum()
@@ -395,8 +522,8 @@ with tab_perf:
                                          line=dict(color=COL_INDOOR, width=2)))
             fig_pmc.add_trace(go.Scatter(x=pmc["date"], y=pmc["tsb"], name="TSB (Forme)",
                                          line=dict(color=COL_ACCENT, width=2), fill="tozeroy",
-                                         fillcolor="rgba(167,139,250,0.08)"))
-            fig_pmc.add_hline(y=0, line_dash="dash", line_color="rgba(255,255,255,0.15)")
+                                         fillcolor="rgba(124,58,237,0.08)"))
+            fig_pmc.add_hline(y=0, line_dash="dash", line_color="rgba(0,0,0,0.15)")
             fig_pmc.update_layout(**plotly_layout(height=340, legend=dict(orientation="h", y=1.12, bgcolor="rgba(0,0,0,0)")))
             st.plotly_chart(fig_pmc, use_container_width=True)
         else:
@@ -421,7 +548,7 @@ with tab_perf:
                 ))
                 fig_z2.add_hline(y=z2_goal, line_dash="dash", line_color=COL_ACCENT,
                                  annotation_text=f"Objectif {z2_goal}W")
-                fig_z2.add_hline(y=z2_baseline, line_dash="dot", line_color="rgba(255,255,255,0.2)",
+                fig_z2.add_hline(y=z2_baseline, line_dash="dot", line_color="rgba(0,0,0,0.2)",
                                  annotation_text=f"Baseline {z2_baseline}W")
                 fig_z2.update_layout(**plotly_layout(height=260))
                 st.plotly_chart(fig_z2, use_container_width=True)
@@ -440,7 +567,7 @@ with tab_perf:
             x=pc_df["duration_s"], y=pc_df["power_w"],
             mode="lines", name="Best power",
             line=dict(color=COL_ACCENT, width=2.5),
-            fill="tozeroy", fillcolor="rgba(167,139,250,0.1)",
+            fill="tozeroy", fillcolor="rgba(124,58,237,0.08)",
         ))
         fig_pc.update_xaxes(type="log", title="Durée (s)",
                             tickvals=[5, 10, 30, 60, 300, 600, 1200, 3600],
@@ -799,7 +926,7 @@ with tab_plan:
             elif day["environment"] == "outdoor":
                 env_badge = '<span class="cat-badge cat-outdoor">Outdoor</span>'
             else:
-                env_badge = '<span class="cat-badge" style="background:rgba(255,255,255,0.05);color:#9ca3b0;">Repos</span>'
+                env_badge = '<span class="cat-badge" style="background:#f1f5f9;color:#64748b;">Repos</span>'
 
             dur_txt = f" · {day['duration_min']}min" if day["duration_min"] > 0 else ""
 
@@ -824,8 +951,8 @@ with tab_plan:
         rest_count = sum(1 for d in plan["days"] if d["environment"] == "rest")
 
         st.markdown(f"""
-        <div style="margin-top:16px;padding:12px 16px;background:var(--bg-card);border-radius:10px;border:1px solid var(--border);">
-            <span style="font-weight:700;color:var(--text-primary);">Résumé de la semaine</span>
+        <div style="margin-top:16px;padding:14px 18px;background:var(--bg-card);border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow-sm);">
+            <span style="font-weight:700;color:var(--text-primary);">📊 Résumé de la semaine</span>
             <span style="color:var(--text-secondary);margin-left:12px;">
                 {total_plan_min // 60}h{total_plan_min % 60:02d} total ·
                 {indoor_count} indoor · {outdoor_count} outdoor · {rest_count} repos
@@ -844,14 +971,14 @@ with tab_coach:
         c_score, c_fitness, c_volume = st.columns(3)
         with c_score:
             st.markdown(f"""
-            <div style="text-align:center;padding:20px;">
-                <div style="font-size:3.5rem;font-weight:800;color:var(--accent-blue);">{report.overall_score}</div>
+            <div style="text-align:center;padding:20px;background:var(--bg-card);border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow-sm);">
+                <div style="font-size:3.5rem;font-weight:800;color:var(--accent-orange);">{report.overall_score}</div>
                 <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px;">Score global</div>
             </div>
             """, unsafe_allow_html=True)
         with c_fitness:
             st.markdown(f"""
-            <div style="text-align:center;padding:20px;">
+            <div style="text-align:center;padding:20px;background:var(--bg-card);border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow-sm);">
                 <div style="font-size:2rem;">{report.fitness_emoji}</div>
                 <div style="font-size:1.1rem;font-weight:700;color:var(--text-primary);">{report.fitness_status}</div>
                 <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;">
@@ -861,7 +988,7 @@ with tab_coach:
             """, unsafe_allow_html=True)
         with c_volume:
             st.markdown(f"""
-            <div style="text-align:center;padding:20px;">
+            <div style="text-align:center;padding:20px;background:var(--bg-card);border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow-sm);">
                 <div style="font-size:1.6rem;font-weight:700;color:var(--text-primary);">{report.weekly_hours_avg:.1f}h</div>
                 <div style="font-size:0.78rem;color:var(--text-secondary);">/ semaine · {report.rides_per_week_avg:.1f} sorties</div>
                 <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px;">
@@ -887,8 +1014,8 @@ with tab_coach:
             fig_zones = go.Figure(go.Bar(
                 x=zone_df["Temps (%)"], y=zone_df["Zone"],
                 orientation="h",
-                marker_color=[COL_OUTDOOR, COL_OUTDOOR, COL_INDOOR, COL_ACCENT,
-                              "#ef4444", "#ef4444", "#ef4444"][:len(zone_df)],
+                marker_color=["#16a34a", "#22c55e", "#ea580c", "#7c3aed",
+                              "#dc2626", "#ef4444", "#f87171"][:len(zone_df)],
             ))
             fig_zones.update_layout(**plotly_layout(height=220, xaxis_title="% du temps"))
             st.plotly_chart(fig_zones, use_container_width=True)
