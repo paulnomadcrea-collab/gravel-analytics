@@ -793,30 +793,37 @@ with st.sidebar:
 
         # Garmin sync
         st.markdown("**Garmin Connect**")
-        garmin_email = st.text_input("Email Garmin", key="garmin_email")
-        garmin_pwd = st.text_input("Mot de passe", type="password", key="garmin_pwd")
+        st.caption("Email/mot de passe via variables d'env GARMIN_EMAIL & GARMIN_PASSWORD")
         if st.button("🔄 Synchroniser Garmin"):
-            if garmin_email and garmin_pwd:
-                with st.spinner("Connexion Garmin…"):
-                    try:
-                        result = login_step1(garmin_email, garmin_pwd)
-                        if result.get("needs_mfa"):
-                            st.session_state["garmin_mfa_pending"] = True
-                            st.session_state["garmin_session"] = result.get("session")
-                            st.info("Code MFA requis.")
-                        else:
-                            sync_recent(garmin_email, garmin_pwd)
-                            load_data.clear()
-                            st.success("Sync Garmin OK !")
-                    except Exception as ex:
-                        st.error(f"Erreur : {ex}")
+            with st.spinner("Connexion Garmin…"):
+                try:
+                    status, client, client_state = login_step1()
+                    if status == "needs_mfa":
+                        st.session_state["garmin_mfa_pending"] = True
+                        st.session_state["garmin_client"] = client
+                        st.session_state["garmin_client_state"] = client_state
+                        st.info("Code MFA requis.")
+                    else:
+                        ftp = st.session_state.get("ftp", 250)
+                        weight = st.session_state.get("weight", 75)
+                        sync_recent(client=client, ftp=ftp, weight_kg=weight)
+                        load_data.clear()
+                        st.success("Sync Garmin OK !")
+                except Exception as ex:
+                    st.error(f"Erreur : {ex}")
 
         if st.session_state.get("garmin_mfa_pending"):
             mfa_code = st.text_input("Code MFA", key="garmin_mfa")
             if st.button("Valider MFA"):
                 try:
-                    login_step2_mfa(st.session_state["garmin_session"], mfa_code)
-                    sync_recent(garmin_email, garmin_pwd)
+                    client = login_step2_mfa(
+                        st.session_state["garmin_client"],
+                        st.session_state["garmin_client_state"],
+                        mfa_code,
+                    )
+                    ftp = st.session_state.get("ftp", 250)
+                    weight = st.session_state.get("weight", 75)
+                    sync_recent(client=client, ftp=ftp, weight_kg=weight)
                     load_data.clear()
                     st.session_state["garmin_mfa_pending"] = False
                     st.success("Sync Garmin OK !")
@@ -827,7 +834,7 @@ with st.sidebar:
 
         # Strava sync
         st.markdown("**Strava**")
-        if strava_sync.has_tokens():
+        if strava_sync.is_connected():
             st.success("Strava connecté ✓")
             if st.button("🔄 Sync Strava"):
                 with st.spinner("Sync Strava…"):
@@ -835,10 +842,10 @@ with st.sidebar:
                     load_data.clear()
                     st.success("Sync Strava OK !")
         else:
-            auth_url = strava_sync.get_auth_url()
-            if auth_url:
+            try:
+                auth_url = strava_sync.get_auth_url("http://localhost:8501")
                 st.markdown(f"[Connecter Strava]({auth_url})")
-            else:
+            except Exception:
                 st.info("Configurez STRAVA_CLIENT_ID et STRAVA_CLIENT_SECRET.")
 
         st.markdown("---")
