@@ -679,11 +679,19 @@ def fmt_val(v, decimals=0, fallback="—"):
 
 def delta_html(value, suffix="", reverse=False):
     """Return colored delta HTML."""
-    if value is None or (isinstance(value, float) and math.isnan(value)):
+    if value is None:
+        return ""
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        return ""
+    if math.isnan(value):
         return ""
     sign = "+" if value >= 0 else ""
+    # Format nicely: integer if whole, else 2 decimals
+    v_str = f"{value:.0f}" if value == int(value) else f"{value:.2f}"
     cls = "gc-delta-up" if (value >= 0) != reverse else "gc-delta-down"
-    return f'<span class="gc-stat-delta {cls}">{sign}{value}{suffix}</span>'
+    return f'<span class="gc-stat-delta {cls}">{sign}{v_str}{suffix}</span>'
 
 
 def stat_html(label: str, value: str, unit: str = "", delta=None, delta_suffix=""):
@@ -1072,11 +1080,11 @@ if page == "🏠  Tableau de bord":
 
     cols_kpi = st.columns(4)
     with cols_kpi[0]:
-        st.markdown(stat_html("FTP", f"{ftp}", "W", delta="+6", delta_suffix=""), unsafe_allow_html=True)
+        st.markdown(stat_html("FTP", f"{ftp}", "W", delta=6, delta_suffix=""), unsafe_allow_html=True)
     with cols_kpi[1]:
-        st.markdown(stat_html("W/kg", f"{wpkg:.2f}", "", delta="+0.08", delta_suffix=""), unsafe_allow_html=True)
+        st.markdown(stat_html("W/kg", f"{wpkg:.2f}", "", delta=0.08, delta_suffix=""), unsafe_allow_html=True)
     with cols_kpi[2]:
-        st.markdown(stat_html("Fitness · CTL", f"{int(current_ctl)}", "", delta=f"+{int(ctl_delta)}" if ctl_delta >= 0 else str(int(ctl_delta)), delta_suffix=""), unsafe_allow_html=True)
+        st.markdown(stat_html("Fitness · CTL", f"{int(current_ctl)}", "", delta=int(ctl_delta), delta_suffix=""), unsafe_allow_html=True)
     with cols_kpi[3]:
         st.markdown(f"""
         <div class="gc-stat">
