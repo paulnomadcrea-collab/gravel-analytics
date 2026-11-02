@@ -1,6 +1,6 @@
 """
-Gravel Coach v5 — Dashboard unifié indoor/outdoor/Zwift.
-Design dark « Neon Pulse » inspiré de dashboards cycling & health Pinterest.
+Gravel Coach v6 — Dashboard unifié indoor/outdoor/Zwift.
+Design light « Clean White » inspiré d'un dashboard cycling Pinterest fond blanc.
 
 Lancer en local :
     streamlit run app/streamlit_app.py
@@ -45,40 +45,40 @@ if _strava_code and "activity:read" in _strava_scope:
         st.error(f"Échec de la connexion Strava : {e}")
         st.query_params.clear()
 
-# ───────────────────────── CSS — Neon Pulse Dark Theme ─────────────────────────
+# ───────────────────────── CSS — Clean White Light Theme ─────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-    /* ─── Neon Pulse palette (Pinterest-inspired) ─── */
-    --bg-dark:        #0a0a0a;
-    --bg-card:        #141414;
-    --bg-sidebar:     #0e0e0e;
-    --bg-muted:       #1a1a1a;
-    --bg-elevated:    #1e1e1e;
-    --border:         #2a2a2a;
-    --border-light:   #333333;
-    --text-primary:   #f5f5f5;
-    --text-secondary: #a0a0a0;
-    --text-muted:     #666666;
-    --primary:        #C8FF00;   /* neon lime */
-    --primary-dim:    rgba(200,255,0,0.15);
-    --primary-fg:     #0a0a0a;
-    --accent:         #00D4AA;   /* teal */
-    --accent-dim:     rgba(0,212,170,0.15);
-    --chart-1:        #C8FF00;   /* neon lime */
-    --chart-2:        #00D4AA;   /* teal */
-    --chart-3:        #FF6B35;   /* vibrant orange */
-    --chart-4:        #4DA8FF;   /* electric blue */
-    --chart-5:        #FF4D6A;   /* hot pink-red */
-    --chart-6:        #B97CFF;   /* purple */
-    --neon-glow:      0 0 20px rgba(200,255,0,0.15);
-    --shadow-sm:      0 1px 3px rgba(0,0,0,0.5);
-    --shadow-md:      0 4px 14px rgba(0,0,0,0.6);
-    --shadow-lg:      0 10px 30px rgba(0,0,0,0.7);
-    --radius:         12px;
-    --radius-sm:      8px;
+    /* ─── Clean White palette (Pinterest cycling dashboard) ─── */
+    --bg-main:        #F8FAFB;
+    --bg-card:        #FFFFFF;
+    --bg-sidebar:     #1B2432;
+    --bg-muted:       #F1F5F9;
+    --bg-elevated:    #FFFFFF;
+    --border:         #E2E8F0;
+    --border-light:   #CBD5E1;
+    --text-primary:   #1A1A2E;
+    --text-secondary: #4A5568;
+    --text-muted:     #94A3B8;
+    --primary:        #2D6A4F;   /* forest teal-green */
+    --primary-dim:    rgba(45,106,79,0.08);
+    --primary-fg:     #FFFFFF;
+    --accent:         #E8914F;   /* warm orange */
+    --accent-dim:     rgba(232,145,79,0.10);
+    --chart-1:        #2D6A4F;   /* forest green */
+    --chart-2:        #3A8F71;   /* teal */
+    --chart-3:        #E8914F;   /* warm orange */
+    --chart-4:        #D4783A;   /* amber */
+    --chart-5:        #5B9BD5;   /* soft blue */
+    --chart-6:        #7C6FAF;   /* muted purple */
+    --shadow-sm:      0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md:      0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg:      0 10px 30px rgba(0,0,0,0.10);
+    --shadow-card:    0 2px 8px rgba(0,0,0,0.05);
+    --radius:         16px;
+    --radius-sm:      10px;
 }
 
 html, body, [class*="st-"] {
@@ -89,24 +89,25 @@ h1, h2, h3, .font-display {
     font-weight: 800 !important;
 }
 
-/* ─── Global dark background ─── */
+/* ─── Global light background ─── */
 .stApp, .main .block-container {
-    background: var(--bg-dark) !important;
+    background: var(--bg-main) !important;
     color: var(--text-primary) !important;
 }
-.stApp { background-color: var(--bg-dark) !important; }
+.stApp { background-color: var(--bg-main) !important; }
 .main .block-container { max-width: 1200px !important; }
 
-/* ─── Sidebar ─── */
+/* ─── Sidebar (dark) ─── */
 section[data-testid="stSidebar"] {
     background: var(--bg-sidebar) !important;
-    border-right: 1px solid var(--border);
+    border-right: none;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.08);
 }
 section[data-testid="stSidebar"] > div {
     background: var(--bg-sidebar) !important;
 }
 section[data-testid="stSidebar"] .stMarkdown h2 {
-    color: var(--primary) !important;
+    color: #FFFFFF !important;
     font-weight: 800;
     font-family: 'Inter', sans-serif !important;
 }
@@ -114,18 +115,18 @@ section[data-testid="stSidebar"] .stMarkdown h3 {
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.14em;
-    color: var(--text-muted);
+    color: #8899AA;
     margin: 1.4rem 0 0.5rem;
     font-weight: 700;
 }
 section[data-testid="stSidebar"] label {
-    color: var(--text-secondary) !important;
+    color: #B0BEC5 !important;
     font-weight: 500;
 }
 section[data-testid="stSidebar"] .stMarkdown p,
 section[data-testid="stSidebar"] .stMarkdown span,
 section[data-testid="stSidebar"] .stCaption {
-    color: var(--text-muted) !important;
+    color: #8899AA !important;
 }
 
 /* Sidebar inputs */
@@ -133,32 +134,32 @@ section[data-testid="stSidebar"] input,
 section[data-testid="stSidebar"] select,
 section[data-testid="stSidebar"] .stSelectbox > div > div,
 section[data-testid="stSidebar"] .stNumberInput input {
-    background: var(--bg-muted) !important;
-    border: 1px solid var(--border) !important;
+    background: rgba(255,255,255,0.08) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
     border-radius: var(--radius-sm) !important;
-    color: var(--text-primary) !important;
+    color: #FFFFFF !important;
 }
 
 /* Sidebar buttons */
 section[data-testid="stSidebar"] .stButton > button {
     background: var(--primary) !important;
-    color: var(--primary-fg) !important;
+    color: #FFFFFF !important;
     border: none !important;
     border-radius: var(--radius-sm) !important;
     font-weight: 700 !important;
     padding: 0.55rem 1.1rem !important;
     transition: all 0.25s ease;
-    box-shadow: var(--neon-glow);
+    box-shadow: 0 2px 8px rgba(45,106,79,0.25);
 }
 section[data-testid="stSidebar"] .stButton > button:hover {
     opacity: 0.9;
-    box-shadow: 0 0 30px rgba(200,255,0,0.25);
+    box-shadow: 0 4px 16px rgba(45,106,79,0.35);
 }
 
 /* ─── KPI cards ─── */
 .kpi-row {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     margin-bottom: 1.4rem;
     flex-wrap: wrap;
 }
@@ -166,25 +167,25 @@ section[data-testid="stSidebar"] .stButton > button:hover {
     flex: 1;
     min-width: 140px;
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: none;
     border-radius: var(--radius);
     padding: 20px;
     transition: all 0.25s ease;
     position: relative;
     overflow: hidden;
+    box-shadow: var(--shadow-card);
 }
 .kpi-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--primary), transparent);
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
     opacity: 0;
     transition: opacity 0.25s;
 }
 .kpi-card:hover {
-    border-color: var(--border-light);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
 .kpi-card:hover::before { opacity: 1; }
@@ -233,9 +234,9 @@ section[data-testid="stSidebar"] .stButton > button:hover {
     border-radius: 999px;
     text-transform: uppercase;
 }
-.cat-outdoor { background: var(--accent-dim); color: var(--accent); }
-.cat-indoor  { background: var(--primary-dim); color: var(--primary); }
-.cat-zwift   { background: rgba(77,168,255,0.15); color: var(--chart-4); }
+.cat-outdoor { background: var(--primary-dim); color: var(--primary); }
+.cat-indoor  { background: var(--accent-dim); color: var(--accent); }
+.cat-zwift   { background: rgba(91,155,213,0.12); color: var(--chart-5); }
 
 /* ─── Section header ─── */
 .section-header {
@@ -267,7 +268,8 @@ section[data-testid="stSidebar"] .stButton > button:hover {
     background: var(--bg-card);
     border-radius: var(--radius);
     padding: 4px;
-    border: 1px solid var(--border);
+    border: none;
+    box-shadow: var(--shadow-card);
 }
 .stTabs [data-baseweb="tab"] {
     border-radius: var(--radius-sm);
@@ -284,8 +286,9 @@ section[data-testid="stSidebar"] .stButton > button:hover {
 }
 .stTabs [aria-selected="true"] {
     background: var(--primary) !important;
-    color: var(--primary-fg) !important;
+    color: #FFFFFF !important;
     font-weight: 700;
+    box-shadow: 0 2px 6px rgba(45,106,79,0.2);
 }
 .stTabs [data-baseweb="tab-highlight"] {
     background: transparent !important;
@@ -302,51 +305,54 @@ section[data-testid="stSidebar"] .stButton > button:hover {
     background: var(--bg-card) !important;
     color: var(--text-primary) !important;
     transition: all 0.25s ease;
+    box-shadow: var(--shadow-sm);
 }
 .stButton > button:hover {
     border-color: var(--primary) !important;
     background: var(--bg-muted) !important;
-    box-shadow: var(--neon-glow);
+    box-shadow: var(--shadow-md);
 }
 
 /* ─── Dataframe ─── */
 .stDataFrame {
     border-radius: var(--radius);
     overflow: hidden;
-    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+    border: none;
 }
 
 /* ─── Training plan card ─── */
 .plan-card {
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: none;
     border-radius: var(--radius);
     padding: 16px 20px;
     margin-bottom: 8px;
     transition: all 0.25s ease;
+    box-shadow: var(--shadow-card);
 }
-.plan-card:hover { border-color: var(--border-light); transform: translateY(-1px); }
-.plan-card.done  { opacity: 0.5; border-left: 3px solid var(--accent); }
-.plan-card.today { border-left: 3px solid var(--primary); background: var(--primary-dim); }
+.plan-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.plan-card.done  { opacity: 0.5; border-left: 3px solid var(--primary); }
+.plan-card.today { border-left: 3px solid var(--accent); background: var(--accent-dim); }
 .plan-card.future { border-left: 3px solid var(--border); }
 
 /* ─── Progress bar ─── */
 .stProgress > div > div {
-    background: var(--primary) !important;
-    border-radius: 4px;
-    box-shadow: 0 0 8px rgba(200,255,0,0.3);
+    background: linear-gradient(90deg, var(--primary), var(--accent)) !important;
+    border-radius: 6px;
 }
 .stProgress > div {
     background: var(--bg-muted) !important;
-    border-radius: 4px;
+    border-radius: 6px;
 }
 
 /* ─── Metric styling ─── */
 [data-testid="stMetric"] {
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: none;
     border-radius: var(--radius);
     padding: 16px 20px;
+    box-shadow: var(--shadow-card);
 }
 [data-testid="stMetricLabel"] {
     color: var(--text-muted) !important;
@@ -369,14 +375,16 @@ section[data-testid="stSidebar"] .stButton > button:hover {
 .streamlit-expanderHeader {
     background: var(--bg-card) !important;
     border-radius: var(--radius) !important;
-    border: 1px solid var(--border) !important;
+    border: none !important;
     color: var(--text-primary) !important;
     font-weight: 600 !important;
+    box-shadow: var(--shadow-sm);
 }
 details {
     background: var(--bg-card) !important;
     border-radius: var(--radius) !important;
-    border: 1px solid var(--border) !important;
+    border: none !important;
+    box-shadow: var(--shadow-sm);
 }
 
 /* ─── Plotly ─── */
@@ -385,26 +393,26 @@ details {
 /* ─── Alerts / info boxes ─── */
 .stAlert {
     border-radius: var(--radius) !important;
-    border: 1px solid var(--border) !important;
-    background: var(--bg-card) !important;
+    border: none !important;
+    box-shadow: var(--shadow-sm) !important;
 }
 
 /* ─── Inputs ─── */
 .stMultiSelect > div > div,
 .stSelectbox > div > div {
     border-radius: var(--radius-sm) !important;
-    background: var(--bg-muted) !important;
+    background: var(--bg-card) !important;
     border-color: var(--border) !important;
     color: var(--text-primary) !important;
 }
 .stTextInput input {
     border-radius: var(--radius-sm) !important;
     border: 1px solid var(--border) !important;
-    background: var(--bg-muted) !important;
+    background: var(--bg-card) !important;
     color: var(--text-primary) !important;
 }
 .stNumberInput input {
-    background: var(--bg-muted) !important;
+    background: var(--bg-card) !important;
     border: 1px solid var(--border) !important;
     border-radius: var(--radius-sm) !important;
     color: var(--text-primary) !important;
@@ -429,12 +437,13 @@ details {
 /* ─── Coach recommendation card ─── */
 .coach-reco {
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: none;
     border-radius: var(--radius);
     padding: 20px 24px;
     margin-bottom: 1rem;
     position: relative;
     overflow: hidden;
+    box-shadow: var(--shadow-card);
 }
 .coach-reco::before {
     content: '';
@@ -475,21 +484,21 @@ details {
     font-weight: 600;
 }
 
-/* ─── Score ring (neon glow) ─── */
+/* ─── Score ring ─── */
 .score-ring {
     text-align: center;
     padding: 24px;
     background: var(--bg-card);
     border-radius: var(--radius);
-    border: 1px solid var(--border);
+    border: none;
     position: relative;
+    box-shadow: var(--shadow-card);
 }
 .score-ring .score-value {
     font-size: 3.5rem;
     font-weight: 900;
     font-family: 'Inter', sans-serif;
     color: var(--primary);
-    text-shadow: 0 0 30px rgba(200,255,0,0.3);
     letter-spacing: -0.03em;
 }
 .score-ring .score-label {
@@ -503,8 +512,8 @@ details {
 
 /* ─── File uploader ─── */
 [data-testid="stFileUploader"] {
-    background: var(--bg-muted) !important;
-    border: 1px dashed var(--border-light) !important;
+    background: var(--bg-card) !important;
+    border: 2px dashed var(--border) !important;
     border-radius: var(--radius) !important;
 }
 [data-testid="stFileUploader"] label {
@@ -513,40 +522,41 @@ details {
 
 /* ─── Scrollbar ─── */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-dark); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--bg-main); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-/* ─── Hero banner ─── */
+/* ─── Hero banner (dark card on light bg) ─── */
 .hero-banner {
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a0a 50%, #0a1a0a 100%);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px 32px;
+    background: linear-gradient(135deg, #1B2432 0%, #2D3B4E 50%, #1E3A2F 100%);
+    border: none;
+    border-radius: 20px;
+    padding: 32px 36px;
     margin-bottom: 1.4rem;
     position: relative;
     overflow: hidden;
+    box-shadow: var(--shadow-lg);
 }
 .hero-banner::after {
     content: '';
     position: absolute;
     top: -50%; right: -20%;
     width: 300px; height: 300px;
-    background: radial-gradient(circle, rgba(200,255,0,0.06) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(45,106,79,0.15) 0%, transparent 70%);
     pointer-events: none;
 }
 .hero-title {
     font-family: 'Inter', sans-serif;
     font-weight: 900;
     font-size: 1.5rem;
-    color: var(--text-primary);
+    color: #FFFFFF;
     letter-spacing: -0.03em;
     line-height: 1.2;
     margin-bottom: 4px;
 }
 .hero-sub {
     font-size: 0.78rem;
-    color: var(--text-muted);
+    color: rgba(255,255,255,0.6);
     letter-spacing: 0.02em;
 }
 </style>
@@ -556,10 +566,10 @@ details {
 with st.sidebar:
     st.markdown("""
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#C8FF00,#00D4AA);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.1rem;color:#0a0a0a;font-family:'Inter',sans-serif;">G</div>
+        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#2D6A4F,#3A8F71);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.1rem;color:#FFFFFF;font-family:'Inter',sans-serif;">G</div>
         <div>
-            <div style="font-family:'Inter',sans-serif;font-weight:800;font-size:1.05rem;color:#f5f5f5;line-height:1.2;">Gravel Coach</div>
-            <div style="font-size:0.62rem;color:#666666;letter-spacing:0.06em;text-transform:uppercase;font-weight:600;">Performance · Indoor & Outdoor</div>
+            <div style="font-family:'Inter',sans-serif;font-weight:800;font-size:1.05rem;color:#FFFFFF;line-height:1.2;">Gravel Coach</div>
+            <div style="font-size:0.62rem;color:#8899AA;letter-spacing:0.06em;text-transform:uppercase;font-weight:600;">Performance · Indoor & Outdoor</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -710,7 +720,7 @@ with st.sidebar:
         conn.close()
 
     st.markdown("---")
-    st.caption("v5.0 · Gravel Coach — Neon Pulse")
+    st.caption("v6.0 · Gravel Coach — Clean White")
 
 # ───────────────────────── Load data ─────────────────────────
 df = db.load_activities_df()
@@ -718,7 +728,7 @@ df = db.load_activities_df()
 if df.empty:
     st.markdown("""
     <div style="text-align:center;padding:80px 20px;">
-        <div style="width:72px;height:72px;border-radius:16px;background:linear-gradient(135deg,#C8FF00,#00D4AA);display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:2rem;color:#0a0a0a;font-family:'Inter',sans-serif;margin-bottom:20px;box-shadow:0 0 40px rgba(200,255,0,0.15);">G</div>
+        <div style="width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,#2D6A4F,#3A8F71);display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:2rem;color:#FFFFFF;font-family:'Inter',sans-serif;margin-bottom:20px;box-shadow:0 8px 24px rgba(45,106,79,0.2);">G</div>
         <h2 style="font-family:'Inter',sans-serif;font-weight:900;color:var(--text-primary);margin:0 0 8px;letter-spacing:-0.02em;">Bienvenue sur Gravel Coach</h2>
         <p style="color:var(--text-muted);font-size:0.9rem;max-width:400px;margin:0 auto;">Synchronise tes données Garmin Connect ou importe un fichier FIT/GPX/TCX via la barre latérale pour commencer.</p>
     </div>
@@ -750,17 +760,17 @@ n_outdoor = len(df_outdoor)
 n_indoor = len(df_indoor)
 n_zwift = len(df_zwift)
 
-# ───────────────────────── Plotly theme — Neon Pulse ─────────────────────────
+# ───────────────────────── Plotly theme — Clean White ─────────────────────────
 PLOTLY_BASE = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="Inter, sans-serif", color="#a0a0a0", size=12),
+    font=dict(family="Inter, sans-serif", color="#4A5568", size=12),
     margin=dict(l=40, r=20, t=30, b=40),
-    hoverlabel=dict(bgcolor="#1a1a1a", bordercolor="#333333", font_size=12,
-                    font_family="Inter", font_color="#f5f5f5"),
+    hoverlabel=dict(bgcolor="#1B2432", bordercolor="#2D3B4E", font_size=12,
+                    font_family="Inter", font_color="#FFFFFF"),
 )
-_GRID = "rgba(255,255,255,0.05)"
-_LEGEND = dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11, color="#666666"))
+_GRID = "rgba(0,0,0,0.06)"
+_LEGEND = dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11, color="#94A3B8"))
 
 
 def plotly_layout(**overrides):
@@ -772,11 +782,11 @@ def plotly_layout(**overrides):
     layout.update(overrides)
     return layout
 
-# Palette Neon Pulse
-COL_OUTDOOR = "#00D4AA"   # teal
-COL_INDOOR = "#C8FF00"    # neon lime
-COL_ZWIFT = "#4DA8FF"     # electric blue
-COL_ACCENT = "#FF6B35"    # vibrant orange
+# Palette Clean White
+COL_OUTDOOR = "#2D6A4F"   # forest green
+COL_INDOOR = "#E8914F"    # warm orange
+COL_ZWIFT = "#5B9BD5"     # soft blue
+COL_ACCENT = "#D4783A"    # amber
 
 # ───────────────────────── KPI row ─────────────────────────
 total_dist = df["distance_km"].sum()
@@ -789,7 +799,7 @@ avg_wpkg = df["watts_per_kg"].mean() if "watts_per_kg" in df and df["watts_per_k
 _today_str = dt.date.today().strftime("%A %d %B %Y").capitalize()
 st.markdown(f"""
 <div class="hero-banner">
-    <div class="section-kicker">{_today_str}</div>
+    <div class="section-kicker" style="color:rgba(255,255,255,0.5);">{_today_str}</div>
     <div class="hero-title">Tableau de bord</div>
     <div class="hero-sub">{n_total} sorties · {total_dist:,.0f} km · {total_elev:,.0f} m D+</div>
 </div>
@@ -1406,8 +1416,8 @@ with tab_coach:
             fig_zones = go.Figure(go.Bar(
                 x=zone_df["Temps (%)"], y=zone_df["Zone"],
                 orientation="h",
-                marker_color=["#00D4AA", "#4DA8FF", "#C8FF00", "#FF6B35",
-                              "#FF4D6A", "#B97CFF", "#FF8C42"][:len(zone_df)],
+                marker_color=["#2D6A4F", "#3A8F71", "#5B9BD5", "#E8914F",
+                              "#D4783A", "#7C6FAF", "#94A3B8"][:len(zone_df)],
             ))
             fig_zones.update_layout(**plotly_layout(height=220, xaxis_title="% du temps"))
             st.plotly_chart(fig_zones, use_container_width=True)
