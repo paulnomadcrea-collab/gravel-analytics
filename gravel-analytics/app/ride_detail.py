@@ -21,23 +21,23 @@ from analysis import (
     training_stress_score,
 )
 
-# ───────────────────────── Couleurs (cohérentes avec streamlit_app — Clean White) ──────
+# ───────────────────────── Couleurs (cohérentes avec streamlit_app — Dark Lovable) ──────
 
-COL_POWER = "#2D6A4F"     # forest green
-COL_HR = "#E85D75"        # soft rose
-COL_SPEED = "#5B9BD5"     # soft blue
-COL_ALT = "#CBD5E1"       # light gray
-COL_CADENCE = "#3A8F71"   # teal
-COL_ACCENT = "#E8914F"    # warm orange
+COL_POWER = "#c4873a"     # primary ember/orange
+COL_HR = "#c45a5a"        # chart-5 warm red
+COL_SPEED = "#5ba0c4"     # chart-4 blue
+COL_ALT = "#4d453e"       # muted earth tone
+COL_CADENCE = "#6db56d"   # accent green
+COL_ACCENT = "#d4b74a"    # chart-3 gold
 
-_GRID = "rgba(0,0,0,0.06)"
+_GRID = "rgba(77,69,62,0.4)"
 _PLOTLY_BASE = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="Inter, sans-serif", color="#4A5568", size=12),
+    font=dict(family="Hind, sans-serif", color="#b5ada5", size=12),
     margin=dict(l=40, r=20, t=30, b=40),
-    hoverlabel=dict(bgcolor="#1B2432", bordercolor="#2D3B4E", font_size=12,
-                    font_family="Inter", font_color="#FFFFFF"),
+    hoverlabel=dict(bgcolor="#38322d", bordercolor="#4d453e", font_size=12,
+                    font_family="Hind", font_color="#f0ece8"),
 )
 
 
@@ -45,7 +45,7 @@ def _layout(**kw):
     layout = dict(**_PLOTLY_BASE)
     layout.setdefault("xaxis", dict(gridcolor=_GRID, zerolinecolor=_GRID))
     layout.setdefault("yaxis", dict(gridcolor=_GRID, zerolinecolor=_GRID))
-    layout.setdefault("legend", dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11, color="#64748b")))
+    layout.setdefault("legend", dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11, color="#b5ada5")))
     layout.update(kw)
     return layout
 
@@ -181,7 +181,7 @@ def fig_time_series(df: pd.DataFrame, ftp: float) -> go.Figure:
             x=elapsed_min, y=df["power_w"],
             mode="lines", name="Puissance",
             line=dict(color=COL_POWER, width=1),
-            fill="tozeroy", fillcolor="rgba(234,88,12,0.10)",
+            fill="tozeroy", fillcolor="rgba(196,135,58,0.15)",
         ), row=1, col=1)
         # Ligne FTP
         fig.add_hline(y=ftp, line_dash="dash", line_color=COL_ACCENT,
@@ -201,7 +201,7 @@ def fig_time_series(df: pd.DataFrame, ftp: float) -> go.Figure:
             x=elapsed_min, y=df["hr"],
             mode="lines", name="FC",
             line=dict(color=COL_HR, width=1.2),
-            fill="tozeroy", fillcolor="rgba(220,38,38,0.08)",
+            fill="tozeroy", fillcolor="rgba(196,90,90,0.15)",
         ), row=2, col=1)
 
     # Vitesse
@@ -218,7 +218,7 @@ def fig_time_series(df: pd.DataFrame, ftp: float) -> go.Figure:
             x=elapsed_min, y=df["altitude_m"],
             mode="lines", name="Altitude",
             line=dict(color=COL_ALT, width=1),
-            fill="tozeroy", fillcolor="rgba(100,116,139,0.12)",
+            fill="tozeroy", fillcolor="rgba(77,69,62,0.25)",
         ), row=4, col=1)
 
     fig.update_xaxes(title_text="Temps (min)", row=4, col=1, gridcolor=_GRID)
@@ -231,11 +231,11 @@ def fig_time_series(df: pd.DataFrame, ftp: float) -> go.Figure:
         height=700,
         showlegend=True,
         legend=dict(orientation="h", y=1.06, bgcolor="rgba(0,0,0,0)",
-                    font=dict(size=11, color="#64748b")),
+                    font=dict(size=11, color="#b5ada5")),
     )
     # Annotations de sous-titres : style uniforme
     for ann in fig.layout.annotations:
-        ann.font = dict(size=12, color="#64748b", family="Inter, sans-serif")
+        ann.font = dict(size=12, color="#b5ada5", family="Hind, sans-serif")
 
     return fig
 
@@ -255,8 +255,8 @@ def fig_zone_distribution(df: pd.DataFrame, ftp: float) -> go.Figure | None:
         lambda r: f"{r['zone']}  ({r['pct']:.0f}% · {_fmt_duration(r['time_s'])})", axis=1
     )
 
-    zone_colors = ["#16a34a", "#22c55e", "#ea580c", "#7c3aed",
-                   "#dc2626", "#ef4444", "#f87171"]
+    zone_colors = ["#6db56d", "#8ec98e", "#d4b74a", "#c4873a",
+                   "#c45a5a", "#e07070", "#f09090"]
 
     fig = go.Figure(go.Bar(
         x=zdf["pct"], y=zdf["label"],
@@ -305,7 +305,7 @@ def fig_cadence(df: pd.DataFrame) -> go.Figure | None:
         x=elapsed_min, y=df["cadence"],
         mode="lines", name="Cadence",
         line=dict(color=COL_CADENCE, width=1.2),
-        fill="tozeroy", fillcolor="rgba(8,145,178,0.10)",
+        fill="tozeroy", fillcolor="rgba(109,181,109,0.15)",
     ))
     fig.update_layout(**_layout(height=220, xaxis_title="Temps (min)",
                                 yaxis_title="rpm"))
