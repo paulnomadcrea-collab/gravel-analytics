@@ -199,6 +199,14 @@ section[data-testid="stSidebar"] .stRadio [role="radiogroup"] > div > div:first-
     margin: 0 0 24px 0;
 }
 
+/* ── Stat card wrapper (individual KPI cards) ── */
+.gc-stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+}
+
 /* ── Stat component ── */
 .gc-stat {
     display: flex;
@@ -272,6 +280,18 @@ section[data-testid="stSidebar"] .stRadio [role="radiogroup"] > div > div:first-
     line-height: 1.5;
     position: relative;
 }
+.gc-coach-reco-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary);
+    text-decoration: none;
+    position: relative;
+}
+.gc-coach-reco-link:hover { text-decoration: underline; }
 
 /* ── Section title ── */
 .gc-section-title {
@@ -487,10 +507,20 @@ div[data-testid="stExpander"] summary {
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
 }
+@media (min-width: 768px) {
+    .gc-ride-detail-grid { grid-template-columns: repeat(6, 1fr); }
+}
 .gc-ride-detail-item {
+    padding: 0;
+}
+.gc-ride-summary {
     background: var(--bg-muted);
     border-radius: 8px;
     padding: 12px 16px;
+    margin-top: 16px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
 }
 
 /* ── Records grid (performance page) ── */
@@ -694,17 +724,25 @@ def delta_html(value, suffix="", reverse=False):
     return f'<span class="gc-stat-delta {cls}">{sign}{v_str}{suffix}</span>'
 
 
-def stat_html(label: str, value: str, unit: str = "", delta=None, delta_suffix=""):
-    """Render a Stat component matching Lovable design."""
+def stat_html(label: str, value: str, unit: str = "", delta=None, delta_suffix="",
+              delta_text: str = ""):
+    """Render a Stat component matching Lovable design, wrapped in a card."""
     d = ""
-    if delta is not None:
+    if delta_text:
+        # Use descriptive delta string like Lovable ("+6 W en 30 j")
+        up = delta_text.startswith("+")
+        cls = "gc-delta-up" if up else "gc-delta-down"
+        d = f'<div class="gc-stat-delta {cls}" style="margin-top:4px">{delta_text}</div>'
+    elif delta is not None:
         d = delta_html(delta, delta_suffix)
     return f"""
-    <div class="gc-stat">
-        <div class="gc-stat-label">{label}</div>
-        <div class="gc-stat-row">
-            <span class="gc-stat-value">{value}</span>
-            <span class="gc-stat-unit">{unit}</span>
+    <div class="gc-stat-card">
+        <div class="gc-stat">
+            <div class="gc-stat-label">{label}</div>
+            <div class="gc-stat-row">
+                <span class="gc-stat-value">{value}</span>
+                <span class="gc-stat-unit">{unit}</span>
+            </div>
             {d}
         </div>
     </div>"""
@@ -1063,10 +1101,10 @@ if page == "🏠  Tableau de bord":
     <div class="gc-coach-reco">
         <div class="gc-coach-reco-title">✨ Recommandation du coach</div>
         <div class="gc-coach-reco-text">
-            Ta forme est bonne avec un TSB légèrement négatif — c'est le signe d'une charge
-            d'entraînement productive. Continue sur ce rythme en gardant 2-3 sorties Z2
-            longues par semaine. Prochaine étape : une session d'intervalles Z4 mardi.
+            Ta forme est légèrement négative (−3) après une semaine chargée. Aujourd'hui : repos ou 45 min très souples.
+            Demain, séance seuil 2×20 min à 255 W — ton FTP progresse, c'est le bon moment pour le consolider.
         </div>
+        <div class="gc-coach-reco-link">Parler au coach →</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1080,18 +1118,21 @@ if page == "🏠  Tableau de bord":
 
     cols_kpi = st.columns(4)
     with cols_kpi[0]:
-        st.markdown(stat_html("FTP", f"{ftp}", "W", delta=6, delta_suffix=""), unsafe_allow_html=True)
+        st.markdown(stat_html("FTP", f"{ftp}", "W", delta_text="+6 W en 30 j"), unsafe_allow_html=True)
     with cols_kpi[1]:
-        st.markdown(stat_html("W/kg", f"{wpkg:.2f}", "", delta=0.08, delta_suffix=""), unsafe_allow_html=True)
+        st.markdown(stat_html("W/kg", f"{wpkg:.2f}", "", delta_text="+0,08"), unsafe_allow_html=True)
     with cols_kpi[2]:
-        st.markdown(stat_html("Fitness · CTL", f"{int(current_ctl)}", "", delta=int(ctl_delta), delta_suffix=""), unsafe_allow_html=True)
+        st.markdown(stat_html("Fitness (CTL)", f"{int(current_ctl)}", "", delta_text=f"+{int(ctl_delta)} sur 4 sem."), unsafe_allow_html=True)
     with cols_kpi[3]:
+        tsb_cls = "gc-delta-down" if current_tsb < 0 else "gc-delta-up"
         st.markdown(f"""
-        <div class="gc-stat">
-            <div class="gc-stat-label">FORME · TSB</div>
-            <div class="gc-stat-row">
-                <span class="gc-stat-value">{int(current_tsb)}</span>
-                <span class="gc-stat-unit" style="color:{'#6db56d' if current_tsb > 0 else '#c45a5a'}">{tsb_label}</span>
+        <div class="gc-stat-card">
+            <div class="gc-stat">
+                <div class="gc-stat-label">Forme (TSB)</div>
+                <div class="gc-stat-row">
+                    <span class="gc-stat-value">{int(current_tsb)}</span>
+                </div>
+                <div class="gc-stat-delta {tsb_cls}" style="margin-top:4px">{tsb_label}</div>
             </div>
         </div>""", unsafe_allow_html=True)
 
@@ -1143,25 +1184,27 @@ if page == "🏠  Tableau de bord":
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="gc-ride-detail-grid">', unsafe_allow_html=True)
-    ride_items = [
-        ("Distance", f"{last['km']:.1f}", "km"),
-        ("Dénivelé", f"{int(last['dplus'])}", "m"),
+    ride_items_html = ""
+    for lbl, val, unit in [
+        ("Distance", f"{last['km']:.1f} km", ""),
+        ("D+", f"{int(last['dplus'])} m", ""),
         ("Durée", fmt_duration(last['duration_s']), ""),
-        ("Puissance NP", f"{int(last['np'])}", "W"),
-        ("FC moyenne", f"{int(last['hr'])}", "bpm"),
+        ("NP", f"{int(last['np'])} W", ""),
+        ("FC moy.", f"{int(last['hr'])}", ""),
         ("TSS", f"{int(last['tss'])}", ""),
-    ]
-    for lbl, val, unit in ride_items:
-        st.markdown(f"""
+    ]:
+        ride_items_html += f"""
         <div class="gc-ride-detail-item">
-            <div style="font-size:0.65rem;color:{C['text_m']};text-transform:uppercase;letter-spacing:0.1em">{lbl}</div>
-            <div style="display:flex;align-items:baseline;gap:4px;margin-top:4px">
-                <span style="font-family:'JetBrains Mono',monospace;font-size:1.15rem;color:{C['text']}">{val}</span>
-                <span style="font-size:0.7rem;color:{C['text_m']}">{unit}</span>
-            </div>
-        </div>""", unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+            <div style="font-size:0.65rem;color:{C['text_m']};text-transform:uppercase;font-family:'Hind',sans-serif">{lbl}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:{C['text']};margin-top:4px">{val}</div>
+        </div>"""
+
+    st.markdown(f"""
+    <div class="gc-ride-detail-grid">{ride_items_html}</div>
+    <div class="gc-ride-summary">
+        +13 W de puissance normalisée vs ta dernière sortie comparable ({last['km']:.0f} km, {int(last['dplus'])} m D+) à FC stable : ton rendement s'améliore sur ce type d'effort.
+    </div>
+    """, unsafe_allow_html=True)
     st.markdown(section_end(), unsafe_allow_html=True)
 
 
