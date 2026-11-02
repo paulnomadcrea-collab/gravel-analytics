@@ -105,6 +105,73 @@ def performance_management_chart(daily_tss: pd.Series) -> pd.DataFrame:
     return pd.DataFrame({"date": idx, "tss": s.values, "ctl": ctl.values, "atl": atl.values, "tsb": tsb.values})
 
 
+def intensity_factor(np_watts: float, ftp: float) -> float:
+    """IF = NP / FTP. Mesure l'intensité relative d'une sortie."""
+    if not ftp or np_watts != np_watts:
+        return float("nan")
+    return np_watts / ftp
+
+
+def best_efforts(power_df: pd.DataFrame, durations: list[int] | None = None) -> dict[int, float]:
+    """Calcule la meilleure puissance moyenne soutenue pour chaque durée (en secondes).
+
+    Retourne {durée_s: meilleur_watts}. Les durées par défaut couvrent
+    le spectre classique : 5s, 30s, 1min, 5min, 10min, 20min, 60min.
+    """
+    if durations is None:
+        durations = [5, 30, 60, 300, 600, 1200, 3600]
+
+    p = power_df["power_w"].fillna(0).values
+    n = len(p)
+    results = {}
+    for dur in durations:
+        if n < dur:
+            results[dur] = float("nan")
+            continue
+        # Rolling mean via cumsum pour performance
+        cumsum = np.concatenate(([0], np.cumsum(p)))
+        rolling_avg = (cumsum[dur:] - cumsum[:-dur]) / dur
+        results[dur] = float(np.max(rolling_avg)) if len(rolling_avg) > 0 else float("nan")
+    return results
+
+
+def difficulty_score(
+    distance_m: float | None,
+    elevation_gain_m: float | None,
+    duration_s: float | None,
+    avg_power_w: float | None,
+    ftp: float = 250.0,
+) -> float | None:
+    """Score de difficulté composite (0–100) pour une sortie gravel/vélo.
+
+    Combine : distance, dénivelé, intensité (puissance/FTP), durée.
+    Pondération orientée gravel (le dénivelé pèse lourd).
+    """
+    if duration_s is None or duration_s <= 0:
+        return None
+
+    score = 0.0
+
+    # Composante distance (max 25 pts — 100km = 25 pts)
+    if distance_m and distance_m > 0:
+        score += min(25.0, (distance_m / 1000) / 100 * 25)
+
+    # Composante dénivelé (max 30 pts — 2000m D+ = 30 pts)
+    if elevation_gain_m and elevation_gain_m > 0:
+        score += min(30.0, elevation_gain_m / 2000 * 30)
+
+    # Composante intensité (max 25 pts — IF=1.0 = 25 pts)
+    if avg_power_w and ftp and ftp > 0:
+        if_val = avg_power_w / ftp
+        score += min(25.0, if_val / 1.0 * 25)
+
+    # Composante durée (max 20 pts — 5h = 20 pts)
+    duration_h = duration_s / 3600
+    score += min(20.0, duration_h / 5.0 * 20)
+
+    return round(min(100.0, score), 1)
+
+
 def z2_progress(activities_df: pd.DataFrame, goal_w: float = 260.0, baseline_w: float = 220.0) -> dict:
     """Résumé de la progression vers l'objectif puissance moyenne en Z2."""
     if activities_df.empty or "avg_z2_power_w" not in activities_df:

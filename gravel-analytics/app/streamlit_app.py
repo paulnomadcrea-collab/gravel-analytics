@@ -23,6 +23,8 @@ from analysis import (
     zone_bounds_watts,
 )
 from coach import generate_coach_report
+from file_import import parse_file, extract_summary_from_df
+from ride_detail import render_ride_analysis
 from sync import sync_recent, sync_strava
 from garmin_sync import login_step1, login_step2_mfa
 import strava_sync
@@ -396,8 +398,68 @@ with st.sidebar:
         else:
             st.info("Strava nécessite un abonnement payant pour l'accès API depuis juin 2026.")
 
+    # ── Import de fichier FIT/GPX/TCX ──
+    st.markdown("### Import de fichier")
+    uploaded_file = st.file_uploader(
+        "Importer un fichier d'activité",
+        type=["fit", "gpx", "tcx"],
+        help="Formats supportés : FIT, GPX, TCX",
+        key="file_uploader",
+    )
+    if uploaded_file is not None:
+        import hashlib
+        file_bytes = uploaded_file.read()
+        file_hash = hashlib.sha256(file_bytes).hexdigest()
+        conn = db.get_conn()
+        if db.file_already_imported(conn, file_hash):
+            st.info("Ce fichier a déjà été importé.")
+        else:
+            ride_df = parse_file(uploaded_file.name, file_bytes)
+            if ride_df.empty:
+                st.error("Impossible de lire ce fichier ou aucune donnée exploitable.")
+            else:
+                st.session_state["imported_ride_df"] = ride_df
+                st.session_state["imported_ride_filename"] = uploaded_file.name
+                st.session_state["imported_ride_hash"] = file_hash
+                # Sauvegarder l'activité en base
+                from analysis import normalized_power as _np_calc, training_stress_score as _tss_calc
+                from analysis import best_efforts as _best_efforts, difficulty_score as _diff_score
+                from analysis import intensity_factor as _if_calc, time_and_avg_power_per_zone as _zone_calc
+                summary = extract_summary_from_df(ride_df, uploaded_file.name)
+                if summary:
+                    act_id = db.next_activity_id(conn)
+                    summary["activity_id"] = act_id
+                    summary["source"] = "file_import"
+                    summary["category"] = db.detect_category(summary)
+                    # Métriques avancées
+                    if ride_df["power_w"].notna().any():
+                        np_w = _np_calc(ride_df)
+                        summary["normalized_power_w"] = np_w
+                        summary["intensity_factor"] = _if_calc(np_w, ftp)
+                        summary["tss"] = _tss_calc(np_w, ftp, summary.get("duration_s") or 0)
+                        efforts = _best_efforts(ride_df)
+                        summary["best_5s_w"] = efforts.get(5)
+                        summary["best_1m_w"] = efforts.get(60)
+                        summary["best_5m_w"] = efforts.get(300)
+                        summary["best_20m_w"] = efforts.get(1200)
+                        summary["best_60m_w"] = efforts.get(3600)
+                    if "cadence" in ride_df and ride_df["cadence"].notna().any():
+                        summary["cadence_avg"] = float(ride_df["cadence"].mean())
+                        summary["cadence_max"] = float(ride_df["cadence"].max())
+                    summary["difficulty_score"] = _diff_score(
+                        summary.get("distance_m"), summary.get("elevation_gain_m"),
+                        summary.get("duration_s"), summary.get("avg_power_w"), ftp,
+                    )
+                    if weight_kg > 0 and summary.get("avg_power_w"):
+                        summary["watts_per_kg"] = round(summary["avg_power_w"] / weight_kg, 2)
+                    db.upsert_activity(conn, summary)
+                    file_fmt = uploaded_file.name.rsplit(".", 1)[-1].upper()
+                    db.save_ride_file(conn, act_id, uploaded_file.name, file_fmt, file_hash)
+                    st.success(f"✅ Activité importée — va dans l'onglet « Analyse de sortie »")
+        conn.close()
+
     st.markdown("---")
-    st.caption("v2.1 · Indoor/Outdoor/Zwift")
+    st.caption("v3.0 · Gravel Performance Coach")
 
 # ───────────────────────── Load data ─────────────────────────
 df = db.load_activities_df()
@@ -501,9 +563,9 @@ kpi_html = f"""
 st.markdown(kpi_html, unsafe_allow_html=True)
 
 # ───────────────────────── Main tabs ─────────────────────────
-tab_perf, tab_indoor, tab_compare, tab_rides, tab_plan, tab_coach = st.tabs([
+tab_perf, tab_indoor, tab_compare, tab_rides, tab_ride_detail, tab_plan, tab_coach = st.tabs([
     "📊 Performance", "🏠 Indoor / Zwift", "⚖️ Indoor vs Outdoor",
-    "📋 Sorties", "📅 Plan d'entraînement", "🧠 Coach IA"
+    "📋 Sorties", "🔬 Analyse de sortie", "📅 Plan d'entraînement", "🧠 Coach IA"
 ])
 
 # ═══════════════════════════ TAB 1 — Performance ═══════════════════════════
@@ -792,7 +854,69 @@ with tab_rides:
     st.caption(f"{len(filtered)} activités — affichage limité à 100")
 
 
-# ═══════════════════════════ TAB 5 — Plan d'entraînement ═══════════════════════════
+# ═══════════════════════════ TAB 5 — Analyse de sortie ═══════════════════════════
+with tab_ride_detail:
+    st.markdown('<div class="section-header">Analyse détaillée d\'une sortie</div>', unsafe_allow_html=True)
+
+    # Source : fichier importé ou sélection d'une activité existante
+    ride_source = st.radio(
+        "Source de la sortie",
+        ["Fichier importé", "Activité synchronisée"],
+        horizontal=True,
+        key="ride_source",
+    )
+
+    if ride_source == "Fichier importé":
+        if "imported_ride_df" in st.session_state and st.session_state["imported_ride_df"] is not None:
+            ride_df = st.session_state["imported_ride_df"]
+            ride_name = st.session_state.get("imported_ride_filename", "Import")
+            render_ride_analysis(st, ride_df, ftp, weight_kg, filename=ride_name)
+        else:
+            st.info("Importe un fichier FIT, GPX ou TCX via la barre latérale pour analyser une sortie.")
+    else:
+        # Sélectionner parmi les activités synchronisées qui ont un détail disponible
+        if not df.empty:
+            ride_options = df[["activity_id", "start_time", "name"]].copy()
+            ride_options["label"] = ride_options.apply(
+                lambda r: f"{r['start_time'].strftime('%d/%m/%Y')} — {r['name']}" if pd.notna(r['name']) else f"{r['start_time'].strftime('%d/%m/%Y')}",
+                axis=1,
+            )
+            ride_options = ride_options.sort_values("start_time", ascending=False).head(50)
+
+            selected_label = st.selectbox("Choisir une activité", ride_options["label"].tolist())
+            sel_row = ride_options[ride_options["label"] == selected_label]
+            if not sel_row.empty:
+                sel_id = int(sel_row.iloc[0]["activity_id"])
+                # Pour les activités Garmin synchronisées, on tente de charger le détail
+                if sel_id > 0:
+                    st.info("L'analyse détaillée seconde-par-seconde n'est disponible que pour les fichiers importés (FIT/GPX/TCX). "
+                            "Les activités synchronisées via Garmin/Strava n'ont que les métriques résumées.")
+                    # Afficher quand même les métriques résumées
+                    act = df[df["activity_id"] == sel_id].iloc[0]
+                    kpi_parts = []
+                    if pd.notna(act.get("duration_s")):
+                        h, rem = divmod(int(act["duration_s"]), 3600)
+                        m, s = divmod(rem, 60)
+                        dur_fmt = f"{h}:{m:02d}:{s:02d}" if h else f"{m}:{s:02d}"
+                        kpi_parts.append(f'<div class="kpi-card"><div class="kpi-label">Durée</div><div class="kpi-value">{dur_fmt}</div></div>')
+                    if pd.notna(act.get("distance_km")):
+                        kpi_parts.append(f'<div class="kpi-card"><div class="kpi-label">Distance</div><div class="kpi-value">{act["distance_km"]:.1f} <small style="font-size:0.6em">km</small></div></div>')
+                    if pd.notna(act.get("avg_power_w")):
+                        kpi_parts.append(f'<div class="kpi-card"><div class="kpi-label">Puissance moy.</div><div class="kpi-value">{act["avg_power_w"]:.0f} <small style="font-size:0.6em">W</small></div></div>')
+                    if pd.notna(act.get("tss")):
+                        kpi_parts.append(f'<div class="kpi-card"><div class="kpi-label">TSS</div><div class="kpi-value">{act["tss"]:.0f}</div></div>')
+                    if pd.notna(act.get("avg_hr")):
+                        kpi_parts.append(f'<div class="kpi-card"><div class="kpi-label">FC moy.</div><div class="kpi-value">{act["avg_hr"]:.0f} <small style="font-size:0.6em">bpm</small></div></div>')
+                    if kpi_parts:
+                        st.markdown(f'<div class="kpi-row">{"".join(kpi_parts)}</div>', unsafe_allow_html=True)
+                else:
+                    # Activité importée par fichier — tenter de recharger depuis session state
+                    st.info("Pour les activités importées, ré-importe le fichier via la sidebar pour l'analyse détaillée.")
+        else:
+            st.info("Aucune activité disponible.")
+
+
+# ═══════════════════════════ TAB 6 — Plan d'entraînement ═══════════════════════════
 with tab_plan:
     st.markdown('<div class="section-header">Plan d\'entraînement structuré</div>', unsafe_allow_html=True)
     st.caption("Plan hebdomadaire adaptatif basé sur tes performances et ta charge actuelle.")
@@ -961,7 +1085,7 @@ with tab_plan:
         """, unsafe_allow_html=True)
 
 
-# ═══════════════════════════ TAB 6 — Coach IA ═══════════════════════════
+# ═══════════════════════════ TAB 7 — Coach IA ═══════════════════════════
 with tab_coach:
     report = generate_coach_report(df, ftp=ftp, weight_kg=weight_kg)
     if report is None:

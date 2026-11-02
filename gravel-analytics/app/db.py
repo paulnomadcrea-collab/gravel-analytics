@@ -57,6 +57,14 @@ def get_conn() -> sqlite3.Connection:
         conn.execute("ALTER TABLE activities ADD COLUMN category TEXT DEFAULT 'outdoor'")
     if "watts_per_kg" not in columns:
         conn.execute("ALTER TABLE activities ADD COLUMN watts_per_kg REAL")
+    # Phase 1 — colonnes d'analyse détaillée
+    for col_name in (
+        "cadence_avg", "cadence_max",
+        "best_5s_w", "best_1m_w", "best_5m_w", "best_20m_w", "best_60m_w",
+        "difficulty_score", "intensity_factor",
+    ):
+        if col_name not in columns:
+            conn.execute(f"ALTER TABLE activities ADD COLUMN {col_name} REAL")
     conn.commit()
     conn.execute(
         """
@@ -65,6 +73,32 @@ def get_conn() -> sqlite3.Connection:
             duration_s INTEGER,
             power_w REAL,
             PRIMARY KEY (activity_id, duration_s)
+        )
+        """
+    )
+    # Phase 1 — historique FTP
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS ftp_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL,
+            ftp_w REAL NOT NULL,
+            source TEXT DEFAULT 'manual',
+            notes TEXT
+        )
+        """
+    )
+    # Phase 1 — fichiers importés
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS ride_files (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            activity_id INTEGER,
+            filename TEXT NOT NULL,
+            file_format TEXT,
+            imported_at TEXT,
+            file_hash TEXT,
+            FOREIGN KEY (activity_id) REFERENCES activities(activity_id)
         )
         """
     )
@@ -116,37 +150,38 @@ def detect_category(a: dict) -> str:
         return "outdoor"
 
 
+_ACTIVITY_COLUMNS = [
+    "activity_id", "source", "category", "start_time", "name", "activity_type",
+    "distance_m", "duration_s", "elevation_gain_m", "avg_speed_kmh", "max_speed_kmh",
+    "avg_power_w", "max_power_w", "normalized_power_w", "avg_hr", "max_hr",
+    "calories", "training_load", "tss", "avg_z2_power_w", "watts_per_kg",
+    "cadence_avg", "cadence_max",
+    "best_5s_w", "best_1m_w", "best_5m_w", "best_20m_w", "best_60m_w",
+    "difficulty_score", "intensity_factor",
+    "raw_json",
+]
+
+
 def upsert_activity(conn: sqlite3.Connection, a: dict) -> None:
     # S'assurer que source et category sont toujours présents
     if "source" not in a:
         a["source"] = "garmin"
     if "category" not in a:
         a["category"] = detect_category(a)
-    if "watts_per_kg" not in a:
-        a["watts_per_kg"] = None
+    # Remplir les colonnes manquantes avec None
+    for col in _ACTIVITY_COLUMNS:
+        if col not in a:
+            a[col] = None
+
+    cols_str = ", ".join(_ACTIVITY_COLUMNS)
+    vals_str = ", ".join(f":{c}" for c in _ACTIVITY_COLUMNS)
+    update_str = ", ".join(f"{c}=excluded.{c}" for c in _ACTIVITY_COLUMNS if c != "activity_id")
+
     conn.execute(
-        """
-        INSERT INTO activities (
-            activity_id, source, category, start_time, name, activity_type, distance_m, duration_s,
-            elevation_gain_m, avg_speed_kmh, max_speed_kmh, avg_power_w, max_power_w,
-            normalized_power_w, avg_hr, max_hr, calories, training_load, tss,
-            avg_z2_power_w, watts_per_kg, raw_json
-        ) VALUES (:activity_id, :source, :category, :start_time, :name, :activity_type, :distance_m, :duration_s,
-            :elevation_gain_m, :avg_speed_kmh, :max_speed_kmh, :avg_power_w, :max_power_w,
-            :normalized_power_w, :avg_hr, :max_hr, :calories, :training_load, :tss,
-            :avg_z2_power_w, :watts_per_kg, :raw_json)
-        ON CONFLICT(activity_id) DO UPDATE SET
-            source=excluded.source, category=excluded.category,
-            start_time=excluded.start_time, name=excluded.name,
-            activity_type=excluded.activity_type, distance_m=excluded.distance_m,
-            duration_s=excluded.duration_s, elevation_gain_m=excluded.elevation_gain_m,
-            avg_speed_kmh=excluded.avg_speed_kmh, max_speed_kmh=excluded.max_speed_kmh,
-            avg_power_w=excluded.avg_power_w, max_power_w=excluded.max_power_w,
-            normalized_power_w=excluded.normalized_power_w, avg_hr=excluded.avg_hr,
-            max_hr=excluded.max_hr, calories=excluded.calories,
-            training_load=excluded.training_load, tss=excluded.tss,
-            avg_z2_power_w=excluded.avg_z2_power_w, watts_per_kg=excluded.watts_per_kg,
-            raw_json=excluded.raw_json
+        f"""
+        INSERT INTO activities ({cols_str})
+        VALUES ({vals_str})
+        ON CONFLICT(activity_id) DO UPDATE SET {update_str}
         """,
         a,
     )
@@ -188,3 +223,54 @@ def load_best_power_curve():
     )
     conn.close()
     return df
+
+
+# ─────────────── Phase 1 — ride_files helpers ───────────────
+
+def save_ride_file(conn: sqlite3.Connection, activity_id: int, filename: str,
+                   file_format: str, file_hash: str) -> None:
+    """Enregistre un fichier importé dans ride_files (évite les doublons par hash)."""
+    import datetime as _dt
+    existing = conn.execute(
+        "SELECT id FROM ride_files WHERE file_hash = ?", (file_hash,)
+    ).fetchone()
+    if existing:
+        return  # déjà importé
+    conn.execute(
+        """INSERT INTO ride_files (activity_id, filename, file_format, imported_at, file_hash)
+           VALUES (?, ?, ?, ?, ?)""",
+        (activity_id, filename, file_format, _dt.datetime.now().isoformat(), file_hash),
+    )
+    conn.commit()
+
+
+def file_already_imported(conn: sqlite3.Connection, file_hash: str) -> bool:
+    """Vérifie si un fichier a déjà été importé (par hash SHA-256)."""
+    row = conn.execute("SELECT id FROM ride_files WHERE file_hash = ?", (file_hash,)).fetchone()
+    return row is not None
+
+
+# ─────────────── Phase 1 — ftp_history helpers ───────────────
+
+def save_ftp(conn: sqlite3.Connection, date: str, ftp_w: float,
+             source: str = "manual", notes: str = "") -> None:
+    conn.execute(
+        "INSERT INTO ftp_history (date, ftp_w, source, notes) VALUES (?, ?, ?, ?)",
+        (date, ftp_w, source, notes),
+    )
+    conn.commit()
+
+
+def load_ftp_history():
+    import pandas as pd
+    conn = get_conn()
+    df = pd.read_sql_query("SELECT * FROM ftp_history ORDER BY date", conn)
+    conn.close()
+    return df
+
+
+def next_activity_id(conn: sqlite3.Connection) -> int:
+    """Génère un ID unique pour une activité importée par fichier (négatif pour éviter les conflits Garmin/Strava)."""
+    row = conn.execute("SELECT MIN(activity_id) FROM activities").fetchone()
+    min_id = row[0] if row and row[0] is not None else 0
+    return min(min_id, 0) - 1
