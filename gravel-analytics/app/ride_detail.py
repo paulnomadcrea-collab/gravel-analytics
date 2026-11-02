@@ -21,23 +21,23 @@ from analysis import (
     training_stress_score,
 )
 
-# ───────────────────────── Couleurs (cohérentes avec streamlit_app) ──────
+# ───────────────────────── Couleurs (cohérentes avec streamlit_app — Neon Pulse) ──────
 
-COL_POWER = "#ea580c"
-COL_HR = "#dc2626"
-COL_SPEED = "#2563eb"
-COL_ALT = "#64748b"
-COL_CADENCE = "#0891b2"
-COL_ACCENT = "#7c3aed"
+COL_POWER = "#C8FF00"     # neon lime
+COL_HR = "#FF4D6A"        # hot pink-red
+COL_SPEED = "#4DA8FF"     # electric blue
+COL_ALT = "#444444"       # dark gray
+COL_CADENCE = "#00D4AA"   # teal
+COL_ACCENT = "#B97CFF"    # purple
 
-_GRID = "rgba(0,0,0,0.06)"
+_GRID = "rgba(255,255,255,0.05)"
 _PLOTLY_BASE = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="Inter, sans-serif", color="#334155", size=12),
+    font=dict(family="Inter, sans-serif", color="#a0a0a0", size=12),
     margin=dict(l=40, r=20, t=30, b=40),
-    hoverlabel=dict(bgcolor="#ffffff", bordercolor="#e2e8f0", font_size=12,
-                    font_family="Inter", font_color="#0f172a"),
+    hoverlabel=dict(bgcolor="#1a1a1a", bordercolor="#333333", font_size=12,
+                    font_family="Inter", font_color="#f5f5f5"),
 )
 
 

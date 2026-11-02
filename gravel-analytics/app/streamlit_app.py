@@ -1,6 +1,6 @@
 """
-Gravel Coach v4 — Dashboard unifié indoor/outdoor/Zwift.
-Design dark « Gravel Coach » inspiré du design system Lovable.
+Gravel Coach v5 — Dashboard unifié indoor/outdoor/Zwift.
+Design dark « Neon Pulse » inspiré de dashboards cycling & health Pinterest.
 
 Lancer en local :
     streamlit run app/streamlit_app.py
@@ -45,43 +45,48 @@ if _strava_code and "activity:read" in _strava_scope:
         st.error(f"Échec de la connexion Strava : {e}")
         st.query_params.clear()
 
-# ───────────────────────── CSS — Dark Gravel Coach Theme ─────────────────────────
+# ───────────────────────── CSS — Neon Pulse Dark Theme ─────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Hind:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-    /* ─── Dark palette (Lovable "Gravel Coach") ─── */
-    --bg-dark:        #2b2520;
-    --bg-card:        #38322d;
-    --bg-sidebar:     #221e1a;
-    --bg-muted:       #3f3832;
-    --border:         #4d453e;
-    --border-light:   #4d453e;
-    --text-primary:   #f0ece8;
-    --text-secondary: #b5ada5;
-    --text-muted:     #8a8279;
-    --primary:        #c4873a;   /* amber */
-    --primary-fg:     #1a1612;
-    --accent:         #6db56d;   /* green */
-    --chart-1:        #c4873a;   /* amber */
-    --chart-2:        #6db56d;   /* green */
-    --chart-3:        #d4783a;   /* orange-rust */
-    --chart-4:        #5ba0c4;   /* blue */
-    --chart-5:        #c45a5a;   /* red */
-    --ember:          linear-gradient(135deg, #c4873a, #d4b74a);
-    --ring:           rgba(196,135,58,0.45);
-    --shadow-sm:      0 1px 3px rgba(0,0,0,0.25);
-    --shadow-md:      0 4px 14px rgba(0,0,0,0.35);
-    --shadow-lg:      0 10px 30px rgba(0,0,0,0.45);
-    --radius:         0.75rem;
+    /* ─── Neon Pulse palette (Pinterest-inspired) ─── */
+    --bg-dark:        #0a0a0a;
+    --bg-card:        #141414;
+    --bg-sidebar:     #0e0e0e;
+    --bg-muted:       #1a1a1a;
+    --bg-elevated:    #1e1e1e;
+    --border:         #2a2a2a;
+    --border-light:   #333333;
+    --text-primary:   #f5f5f5;
+    --text-secondary: #a0a0a0;
+    --text-muted:     #666666;
+    --primary:        #C8FF00;   /* neon lime */
+    --primary-dim:    rgba(200,255,0,0.15);
+    --primary-fg:     #0a0a0a;
+    --accent:         #00D4AA;   /* teal */
+    --accent-dim:     rgba(0,212,170,0.15);
+    --chart-1:        #C8FF00;   /* neon lime */
+    --chart-2:        #00D4AA;   /* teal */
+    --chart-3:        #FF6B35;   /* vibrant orange */
+    --chart-4:        #4DA8FF;   /* electric blue */
+    --chart-5:        #FF4D6A;   /* hot pink-red */
+    --chart-6:        #B97CFF;   /* purple */
+    --neon-glow:      0 0 20px rgba(200,255,0,0.15);
+    --shadow-sm:      0 1px 3px rgba(0,0,0,0.5);
+    --shadow-md:      0 4px 14px rgba(0,0,0,0.6);
+    --shadow-lg:      0 10px 30px rgba(0,0,0,0.7);
+    --radius:         12px;
+    --radius-sm:      8px;
 }
 
 html, body, [class*="st-"] {
-    font-family: 'Hind', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 h1, h2, h3, .font-display {
-    font-family: 'Archivo', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-weight: 800 !important;
 }
 
 /* ─── Global dark background ─── */
@@ -90,6 +95,7 @@ h1, h2, h3, .font-display {
     color: var(--text-primary) !important;
 }
 .stApp { background-color: var(--bg-dark) !important; }
+.main .block-container { max-width: 1200px !important; }
 
 /* ─── Sidebar ─── */
 section[data-testid="stSidebar"] {
@@ -102,15 +108,15 @@ section[data-testid="stSidebar"] > div {
 section[data-testid="stSidebar"] .stMarkdown h2 {
     color: var(--primary) !important;
     font-weight: 800;
-    font-family: 'Archivo', sans-serif !important;
+    font-family: 'Inter', sans-serif !important;
 }
 section[data-testid="stSidebar"] .stMarkdown h3 {
-    font-size: 0.72rem;
+    font-size: 0.65rem;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.14em;
     color: var(--text-muted);
     margin: 1.4rem 0 0.5rem;
-    font-weight: 600;
+    font-weight: 700;
 }
 section[data-testid="stSidebar"] label {
     color: var(--text-secondary) !important;
@@ -129,7 +135,7 @@ section[data-testid="stSidebar"] .stSelectbox > div > div,
 section[data-testid="stSidebar"] .stNumberInput input {
     background: var(--bg-muted) !important;
     border: 1px solid var(--border) !important;
-    border-radius: var(--radius) !important;
+    border-radius: var(--radius-sm) !important;
     color: var(--text-primary) !important;
 }
 
@@ -138,121 +144,148 @@ section[data-testid="stSidebar"] .stButton > button {
     background: var(--primary) !important;
     color: var(--primary-fg) !important;
     border: none !important;
-    border-radius: var(--radius) !important;
+    border-radius: var(--radius-sm) !important;
     font-weight: 700 !important;
     padding: 0.55rem 1.1rem !important;
-    transition: opacity 0.2s;
+    transition: all 0.25s ease;
+    box-shadow: var(--neon-glow);
 }
 section[data-testid="stSidebar"] .stButton > button:hover {
-    opacity: 0.88;
+    opacity: 0.9;
+    box-shadow: 0 0 30px rgba(200,255,0,0.25);
 }
 
 /* ─── KPI cards ─── */
 .kpi-row {
     display: flex;
-    gap: 12px;
-    margin-bottom: 1.2rem;
+    gap: 10px;
+    margin-bottom: 1.4rem;
     flex-wrap: wrap;
 }
 .kpi-card {
     flex: 1;
-    min-width: 130px;
+    min-width: 140px;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 16px 18px;
-    transition: border-color 0.2s;
+    padding: 20px;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), transparent);
+    opacity: 0;
+    transition: opacity 0.25s;
 }
 .kpi-card:hover {
-    border-color: var(--primary);
+    border-color: var(--border-light);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 }
+.kpi-card:hover::before { opacity: 1; }
 .kpi-label {
-    font-size: 0.68rem;
+    font-size: 0.62rem;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
     color: var(--text-muted);
-    margin-bottom: 6px;
-    font-weight: 600;
+    margin-bottom: 8px;
+    font-weight: 700;
 }
 .kpi-value {
-    font-size: 1.6rem;
-    font-weight: 800;
-    font-family: 'Archivo', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    font-family: 'Inter', sans-serif;
     color: var(--text-primary);
-    line-height: 1.1;
+    line-height: 1;
+    letter-spacing: -0.02em;
 }
 .kpi-value small {
-    font-size: 0.55em;
+    font-size: 0.45em;
     color: var(--text-muted);
     font-weight: 500;
+    margin-left: 2px;
 }
 .kpi-sub {
     font-size: 0.72rem;
     color: var(--text-secondary);
-    margin-top: 5px;
+    margin-top: 8px;
 }
 .kpi-delta {
     font-size: 0.72rem;
     font-family: 'JetBrains Mono', monospace;
-    color: var(--accent);
-    margin-top: 3px;
+    color: var(--primary);
+    margin-top: 4px;
+    font-weight: 600;
 }
 
-/* ─── Category badges ─── */
+/* ─── Category badges (pill style) ─── */
 .cat-badge {
     display: inline-block;
-    font-size: 0.66rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
     padding: 3px 10px;
     border-radius: 999px;
     text-transform: uppercase;
 }
-.cat-outdoor { background: rgba(109,181,109,0.18); color: var(--accent); }
-.cat-indoor  { background: rgba(196,135,58,0.18); color: var(--primary); }
-.cat-zwift   { background: rgba(91,160,196,0.18); color: var(--chart-4); }
+.cat-outdoor { background: var(--accent-dim); color: var(--accent); }
+.cat-indoor  { background: var(--primary-dim); color: var(--primary); }
+.cat-zwift   { background: rgba(77,168,255,0.15); color: var(--chart-4); }
 
 /* ─── Section header ─── */
 .section-header {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
-    font-family: 'Archivo', sans-serif;
+    font-family: 'Inter', sans-serif;
     color: var(--text-primary);
-    margin: 1.8rem 0 0.8rem;
+    margin: 2rem 0 0.8rem;
     display: flex;
     align-items: center;
     gap: 8px;
+    letter-spacing: -0.01em;
 }
 .section-kicker {
-    font-size: 0.68rem;
+    font-size: 0.62rem;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.14em;
     color: var(--primary);
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 2px;
 }
 
 /* ─── Hide Streamlit branding ─── */
 #MainMenu, footer, header { visibility: hidden; }
 
-/* ─── Tab styling ─── */
+/* ─── Tab styling (pill-style) ─── */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 0;
+    gap: 4px;
     background: var(--bg-card);
     border-radius: var(--radius);
     padding: 4px;
     border: 1px solid var(--border);
 }
 .stTabs [data-baseweb="tab"] {
-    border-radius: calc(var(--radius) - 2px);
+    border-radius: var(--radius-sm);
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     padding: 8px 16px;
     color: var(--text-muted);
+    letter-spacing: 0.01em;
+    transition: all 0.2s;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    color: var(--text-secondary);
+    background: var(--bg-muted);
 }
 .stTabs [aria-selected="true"] {
     background: var(--primary) !important;
     color: var(--primary-fg) !important;
+    font-weight: 700;
 }
 .stTabs [data-baseweb="tab-highlight"] {
     background: transparent !important;
@@ -263,16 +296,17 @@ section[data-testid="stSidebar"] .stButton > button:hover {
 
 /* ─── General buttons ─── */
 .stButton > button {
-    border-radius: var(--radius) !important;
+    border-radius: var(--radius-sm) !important;
     font-weight: 600 !important;
     border: 1px solid var(--border) !important;
     background: var(--bg-card) !important;
     color: var(--text-primary) !important;
-    transition: all 0.2s;
+    transition: all 0.25s ease;
 }
 .stButton > button:hover {
     border-color: var(--primary) !important;
     background: var(--bg-muted) !important;
+    box-shadow: var(--neon-glow);
 }
 
 /* ─── Dataframe ─── */
@@ -288,18 +322,19 @@ section[data-testid="stSidebar"] .stButton > button:hover {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 16px 20px;
-    margin-bottom: 10px;
-    transition: border-color 0.2s;
+    margin-bottom: 8px;
+    transition: all 0.25s ease;
 }
-.plan-card:hover { border-color: var(--primary); }
-.plan-card.done  { opacity: 0.55; border-left: 4px solid var(--accent); }
-.plan-card.today { border-left: 4px solid var(--primary); background: rgba(196,135,58,0.08); }
-.plan-card.future { border-left: 4px solid var(--border); }
+.plan-card:hover { border-color: var(--border-light); transform: translateY(-1px); }
+.plan-card.done  { opacity: 0.5; border-left: 3px solid var(--accent); }
+.plan-card.today { border-left: 3px solid var(--primary); background: var(--primary-dim); }
+.plan-card.future { border-left: 3px solid var(--border); }
 
 /* ─── Progress bar ─── */
 .stProgress > div > div {
     background: var(--primary) !important;
     border-radius: 4px;
+    box-shadow: 0 0 8px rgba(200,255,0,0.3);
 }
 .stProgress > div {
     background: var(--bg-muted) !important;
@@ -311,15 +346,20 @@ section[data-testid="stSidebar"] .stButton > button:hover {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 14px 18px;
+    padding: 16px 20px;
 }
 [data-testid="stMetricLabel"] {
     color: var(--text-muted) !important;
+    font-size: 0.65rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.1em !important;
+    font-weight: 700 !important;
 }
 [data-testid="stMetricValue"] {
     color: var(--text-primary) !important;
-    font-weight: 800 !important;
-    font-family: 'Archivo', sans-serif !important;
+    font-weight: 900 !important;
+    font-family: 'Inter', sans-serif !important;
+    letter-spacing: -0.02em !important;
 }
 [data-testid="stMetricDelta"] {
     font-family: 'JetBrains Mono', monospace !important;
@@ -352,13 +392,13 @@ details {
 /* ─── Inputs ─── */
 .stMultiSelect > div > div,
 .stSelectbox > div > div {
-    border-radius: var(--radius) !important;
+    border-radius: var(--radius-sm) !important;
     background: var(--bg-muted) !important;
     border-color: var(--border) !important;
     color: var(--text-primary) !important;
 }
 .stTextInput input {
-    border-radius: var(--radius) !important;
+    border-radius: var(--radius-sm) !important;
     border: 1px solid var(--border) !important;
     background: var(--bg-muted) !important;
     color: var(--text-primary) !important;
@@ -366,7 +406,7 @@ details {
 .stNumberInput input {
     background: var(--bg-muted) !important;
     border: 1px solid var(--border) !important;
-    border-radius: var(--radius) !important;
+    border-radius: var(--radius-sm) !important;
     color: var(--text-primary) !important;
 }
 
@@ -400,12 +440,12 @@ details {
     content: '';
     position: absolute;
     top: 0; left: 0;
-    width: 4px; height: 100%;
-    background: var(--ember);
-    border-radius: 4px 0 0 4px;
+    width: 3px; height: 100%;
+    background: linear-gradient(180deg, var(--primary), var(--accent));
+    border-radius: 3px 0 0 3px;
 }
 .coach-reco .coach-title {
-    font-family: 'Archivo', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-weight: 700;
     color: var(--primary);
     font-size: 0.88rem;
@@ -423,44 +463,48 @@ details {
     justify-content: space-between;
     align-items: center;
     background: var(--bg-muted);
-    border-radius: calc(var(--radius) - 2px);
-    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
     margin-bottom: 6px;
     font-size: 0.85rem;
 }
 .compare-row .label { color: var(--text-secondary); }
 .compare-row .value {
     font-family: 'JetBrains Mono', monospace;
-    color: var(--accent);
+    color: var(--primary);
+    font-weight: 600;
 }
 
-/* ─── Score ring ─── */
+/* ─── Score ring (neon glow) ─── */
 .score-ring {
     text-align: center;
-    padding: 20px;
+    padding: 24px;
     background: var(--bg-card);
     border-radius: var(--radius);
     border: 1px solid var(--border);
+    position: relative;
 }
 .score-ring .score-value {
-    font-size: 3.2rem;
-    font-weight: 800;
-    font-family: 'Archivo', sans-serif;
-    background: var(--ember);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 3.5rem;
+    font-weight: 900;
+    font-family: 'Inter', sans-serif;
+    color: var(--primary);
+    text-shadow: 0 0 30px rgba(200,255,0,0.3);
+    letter-spacing: -0.03em;
 }
 .score-ring .score-label {
-    font-size: 0.82rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
     margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
 }
 
 /* ─── File uploader ─── */
 [data-testid="stFileUploader"] {
     background: var(--bg-muted) !important;
-    border: 1px dashed var(--border) !important;
+    border: 1px dashed var(--border-light) !important;
     border-radius: var(--radius) !important;
 }
 [data-testid="stFileUploader"] label {
@@ -468,10 +512,43 @@ details {
 }
 
 /* ─── Scrollbar ─── */
-::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-dark); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ─── Hero banner ─── */
+.hero-banner {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a0a 50%, #0a1a0a 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    margin-bottom: 1.4rem;
+    position: relative;
+    overflow: hidden;
+}
+.hero-banner::after {
+    content: '';
+    position: absolute;
+    top: -50%; right: -20%;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(200,255,0,0.06) 0%, transparent 70%);
+    pointer-events: none;
+}
+.hero-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin-bottom: 4px;
+}
+.hero-sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -479,10 +556,10 @@ details {
 with st.sidebar:
     st.markdown("""
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#c4873a,#d4b74a);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;color:#1a1612;font-family:'Archivo',sans-serif;">G</div>
+        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#C8FF00,#00D4AA);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.1rem;color:#0a0a0a;font-family:'Inter',sans-serif;">G</div>
         <div>
-            <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:1.05rem;color:#f0ece8;line-height:1.2;">Gravel Coach</div>
-            <div style="font-size:0.68rem;color:#8a8279;letter-spacing:0.04em;">Performance · Indoor & Outdoor</div>
+            <div style="font-family:'Inter',sans-serif;font-weight:800;font-size:1.05rem;color:#f5f5f5;line-height:1.2;">Gravel Coach</div>
+            <div style="font-size:0.62rem;color:#666666;letter-spacing:0.06em;text-transform:uppercase;font-weight:600;">Performance · Indoor & Outdoor</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -633,17 +710,17 @@ with st.sidebar:
         conn.close()
 
     st.markdown("---")
-    st.caption("v4.0 · Gravel Coach")
+    st.caption("v5.0 · Gravel Coach — Neon Pulse")
 
 # ───────────────────────── Load data ─────────────────────────
 df = db.load_activities_df()
 
 if df.empty:
     st.markdown("""
-    <div style="text-align:center;padding:60px 20px;">
-        <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#c4873a,#d4b74a);display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:1.8rem;color:#1a1612;font-family:'Archivo',sans-serif;margin-bottom:16px;">G</div>
-        <h2 style="font-family:'Archivo',sans-serif;font-weight:800;color:var(--text-primary);margin:0 0 8px;">Bienvenue sur Gravel Coach</h2>
-        <p style="color:var(--text-muted);font-size:0.95rem;">Synchronise tes données Garmin Connect ou importe un fichier FIT/GPX/TCX via la barre latérale pour commencer.</p>
+    <div style="text-align:center;padding:80px 20px;">
+        <div style="width:72px;height:72px;border-radius:16px;background:linear-gradient(135deg,#C8FF00,#00D4AA);display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:2rem;color:#0a0a0a;font-family:'Inter',sans-serif;margin-bottom:20px;box-shadow:0 0 40px rgba(200,255,0,0.15);">G</div>
+        <h2 style="font-family:'Inter',sans-serif;font-weight:900;color:var(--text-primary);margin:0 0 8px;letter-spacing:-0.02em;">Bienvenue sur Gravel Coach</h2>
+        <p style="color:var(--text-muted);font-size:0.9rem;max-width:400px;margin:0 auto;">Synchronise tes données Garmin Connect ou importe un fichier FIT/GPX/TCX via la barre latérale pour commencer.</p>
     </div>
     """, unsafe_allow_html=True)
     st.stop()
@@ -673,17 +750,17 @@ n_outdoor = len(df_outdoor)
 n_indoor = len(df_indoor)
 n_zwift = len(df_zwift)
 
-# ───────────────────────── Plotly theme — Dark Gravel ─────────────────────────
+# ───────────────────────── Plotly theme — Neon Pulse ─────────────────────────
 PLOTLY_BASE = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="Hind, sans-serif", color="#b5ada5", size=12),
+    font=dict(family="Inter, sans-serif", color="#a0a0a0", size=12),
     margin=dict(l=40, r=20, t=30, b=40),
-    hoverlabel=dict(bgcolor="#38322d", bordercolor="#4d453e", font_size=12,
-                    font_family="Hind", font_color="#f0ece8"),
+    hoverlabel=dict(bgcolor="#1a1a1a", bordercolor="#333333", font_size=12,
+                    font_family="Inter", font_color="#f5f5f5"),
 )
-_GRID = "rgba(255,255,255,0.06)"
-_LEGEND = dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11, color="#8a8279"))
+_GRID = "rgba(255,255,255,0.05)"
+_LEGEND = dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11, color="#666666"))
 
 
 def plotly_layout(**overrides):
@@ -695,11 +772,11 @@ def plotly_layout(**overrides):
     layout.update(overrides)
     return layout
 
-# Palette Gravel Coach
-COL_OUTDOOR = "#6db56d"   # accent green
-COL_INDOOR = "#c4873a"    # primary amber
-COL_ZWIFT = "#5ba0c4"     # blue
-COL_ACCENT = "#d4783a"    # orange-rust
+# Palette Neon Pulse
+COL_OUTDOOR = "#00D4AA"   # teal
+COL_INDOOR = "#C8FF00"    # neon lime
+COL_ZWIFT = "#4DA8FF"     # electric blue
+COL_ACCENT = "#FF6B35"    # vibrant orange
 
 # ───────────────────────── KPI row ─────────────────────────
 total_dist = df["distance_km"].sum()
@@ -708,14 +785,13 @@ total_time = df["duration_h"].sum()
 avg_power = df["avg_power_w"].mean() if df["avg_power_w"].notna().any() else 0
 avg_wpkg = df["watts_per_kg"].mean() if "watts_per_kg" in df and df["watts_per_kg"].notna().any() else 0
 
-# ── Page title (Lovable-style kicker + greeting) ──
+# ── Hero banner ──
 _today_str = dt.date.today().strftime("%A %d %B %Y").capitalize()
 st.markdown(f"""
-<div style="margin-bottom:0.6rem;">
+<div class="hero-banner">
     <div class="section-kicker">{_today_str}</div>
-    <h2 style="font-family:'Archivo',sans-serif;font-weight:800;color:var(--text-primary);margin:0;font-size:1.5rem;">
-        Tableau de bord
-    </h2>
+    <div class="hero-title">Tableau de bord</div>
+    <div class="hero-sub">{n_total} sorties · {total_dist:,.0f} km · {total_elev:,.0f} m D+</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1268,7 +1344,7 @@ with tab_plan:
 
         st.markdown(f"""
         <div style="margin-top:16px;padding:14px 18px;background:var(--bg-card);border-radius:var(--radius);border:1px solid var(--border);">
-            <span style="font-weight:700;font-family:'Archivo',sans-serif;color:var(--text-primary);">Résumé de la semaine</span>
+            <span style="font-weight:700;font-family:'Inter',sans-serif;color:var(--text-primary);">Résumé de la semaine</span>
             <span style="color:var(--text-secondary);margin-left:12px;font-family:'JetBrains Mono',monospace;font-size:0.85rem;">
                 {total_plan_min // 60}h{total_plan_min % 60:02d} total ·
                 {indoor_count} indoor · {outdoor_count} outdoor · {rest_count} repos
@@ -1296,7 +1372,7 @@ with tab_coach:
             st.markdown(f"""
             <div class="score-ring">
                 <div style="font-size:2rem;">{report.fitness_emoji}</div>
-                <div style="font-size:1.1rem;font-weight:700;font-family:'Archivo',sans-serif;color:var(--text-primary);">{report.fitness_status}</div>
+                <div style="font-size:1.1rem;font-weight:700;font-family:'Inter',sans-serif;color:var(--text-primary);">{report.fitness_status}</div>
                 <div style="font-size:0.78rem;font-family:'JetBrains Mono',monospace;color:var(--text-muted);margin-top:4px;">
                     CTL {f"{report.ctl:.0f}" if report.ctl is not None and report.ctl == report.ctl else 'N/A'} · ATL {f"{report.atl:.0f}" if report.atl is not None and report.atl == report.atl else 'N/A'} · TSB {f"{report.tsb:+.0f}" if report.tsb is not None and report.tsb == report.tsb else 'N/A'}
                 </div>
@@ -1305,7 +1381,7 @@ with tab_coach:
         with c_volume:
             st.markdown(f"""
             <div class="score-ring">
-                <div style="font-size:1.6rem;font-weight:700;font-family:'Archivo',sans-serif;color:var(--text-primary);">{report.weekly_hours_avg:.1f}h</div>
+                <div style="font-size:1.6rem;font-weight:700;font-family:'Inter',sans-serif;color:var(--text-primary);">{report.weekly_hours_avg:.1f}h</div>
                 <div style="font-size:0.78rem;color:var(--text-muted);">/ semaine · {report.rides_per_week_avg:.1f} sorties</div>
                 <div style="font-size:0.78rem;font-family:'JetBrains Mono',monospace;color:var(--text-muted);margin-top:2px;">
                     {report.weekly_km_avg:.0f} km · {report.weekly_elevation_avg:.0f} m D+
@@ -1330,8 +1406,8 @@ with tab_coach:
             fig_zones = go.Figure(go.Bar(
                 x=zone_df["Temps (%)"], y=zone_df["Zone"],
                 orientation="h",
-                marker_color=["#6db56d", "#8cc98c", "#c4873a", "#d4783a",
-                              "#c45a5a", "#d47070", "#e08888"][:len(zone_df)],
+                marker_color=["#00D4AA", "#4DA8FF", "#C8FF00", "#FF6B35",
+                              "#FF4D6A", "#B97CFF", "#FF8C42"][:len(zone_df)],
             ))
             fig_zones.update_layout(**plotly_layout(height=220, xaxis_title="% du temps"))
             st.plotly_chart(fig_zones, use_container_width=True)
