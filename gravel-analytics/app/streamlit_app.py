@@ -1,5 +1,6 @@
 """
-Gravel Analytics v2 — Dashboard unifié indoor/outdoor/Zwift.
+Gravel Coach v4 — Dashboard unifié indoor/outdoor/Zwift.
+Design dark « Gravel Coach » inspiré du design system Lovable.
 
 Lancer en local :
     streamlit run app/streamlit_app.py
@@ -29,7 +30,7 @@ from sync import sync_recent, sync_strava
 from garmin_sync import login_step1, login_step2_mfa
 import strava_sync
 
-st.set_page_config(page_title="Gravel Analytics", page_icon="🚵", layout="wide")
+st.set_page_config(page_title="Gravel Coach", page_icon="🚵", layout="wide")
 
 # ───────────────────────── Strava OAuth callback ─────────────────────────
 _strava_code = st.query_params.get("code")
@@ -44,58 +45,69 @@ if _strava_code and "activity:read" in _strava_scope:
         st.error(f"Échec de la connexion Strava : {e}")
         st.query_params.clear()
 
-# ───────────────────────── CSS ─────────────────────────
+# ───────────────────────── CSS — Dark Gravel Coach Theme ─────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Hind:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-    --bg-primary: #f8fafc;
-    --bg-gradient: linear-gradient(to right bottom, #f8fafc, #f1f5f9);
-    --bg-card: rgba(255,255,255,0.95);
-    --bg-card-hover: #ffffff;
-    --border: #e2e8f0;
-    --border-light: #f1f5f9;
-    --text-primary: #0f172a;
-    --text-secondary: #64748b;
-    --text-muted: #94a3b8;
-    --accent-orange: #ea580c;
-    --accent-green: #16a34a;
-    --accent-blue: #2563eb;
-    --accent-red: #dc2626;
-    --accent-purple: #7c3aed;
-    --accent-cyan: #0891b2;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-    --shadow-lg: 0 10px 30px rgba(0,0,0,0.10);
+    /* ─── Dark palette (Lovable "Gravel Coach") ─── */
+    --bg-dark:        #2b2520;
+    --bg-card:        #38322d;
+    --bg-sidebar:     #221e1a;
+    --bg-muted:       #3f3832;
+    --border:         #4d453e;
+    --border-light:   #4d453e;
+    --text-primary:   #f0ece8;
+    --text-secondary: #b5ada5;
+    --text-muted:     #8a8279;
+    --primary:        #c4873a;   /* amber */
+    --primary-fg:     #1a1612;
+    --accent:         #6db56d;   /* green */
+    --chart-1:        #c4873a;   /* amber */
+    --chart-2:        #6db56d;   /* green */
+    --chart-3:        #d4783a;   /* orange-rust */
+    --chart-4:        #5ba0c4;   /* blue */
+    --chart-5:        #c45a5a;   /* red */
+    --ember:          linear-gradient(135deg, #c4873a, #d4b74a);
+    --ring:           rgba(196,135,58,0.45);
+    --shadow-sm:      0 1px 3px rgba(0,0,0,0.25);
+    --shadow-md:      0 4px 14px rgba(0,0,0,0.35);
+    --shadow-lg:      0 10px 30px rgba(0,0,0,0.45);
+    --radius:         0.75rem;
 }
 
 html, body, [class*="st-"] {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-family: 'Hind', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+h1, h2, h3, .font-display {
+    font-family: 'Archivo', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
-/* Global light background */
+/* ─── Global dark background ─── */
 .stApp, .main .block-container {
-    background: var(--bg-gradient) !important;
-    color: var(--text-primary);
+    background: var(--bg-dark) !important;
+    color: var(--text-primary) !important;
 }
+.stApp { background-color: var(--bg-dark) !important; }
 
-/* Sidebar */
+/* ─── Sidebar ─── */
 section[data-testid="stSidebar"] {
-    background: #ffffff !important;
+    background: var(--bg-sidebar) !important;
     border-right: 1px solid var(--border);
 }
 section[data-testid="stSidebar"] > div {
-    background: #ffffff !important;
+    background: var(--bg-sidebar) !important;
 }
 section[data-testid="stSidebar"] .stMarkdown h2 {
-    color: var(--text-primary) !important;
+    color: var(--primary) !important;
     font-weight: 800;
+    font-family: 'Archivo', sans-serif !important;
 }
 section[data-testid="stSidebar"] .stMarkdown h3 {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     color: var(--text-muted);
     margin: 1.4rem 0 0.5rem;
     font-weight: 600;
@@ -104,169 +116,202 @@ section[data-testid="stSidebar"] label {
     color: var(--text-secondary) !important;
     font-weight: 500;
 }
+section[data-testid="stSidebar"] .stMarkdown p,
+section[data-testid="stSidebar"] .stMarkdown span,
+section[data-testid="stSidebar"] .stCaption {
+    color: var(--text-muted) !important;
+}
 
 /* Sidebar inputs */
 section[data-testid="stSidebar"] input,
 section[data-testid="stSidebar"] select,
-section[data-testid="stSidebar"] .stSelectbox > div > div {
-    background: #f8fafc !important;
+section[data-testid="stSidebar"] .stSelectbox > div > div,
+section[data-testid="stSidebar"] .stNumberInput input {
+    background: var(--bg-muted) !important;
     border: 1px solid var(--border) !important;
-    border-radius: 10px !important;
+    border-radius: var(--radius) !important;
     color: var(--text-primary) !important;
 }
 
 /* Sidebar buttons */
 section[data-testid="stSidebar"] .stButton > button {
-    background: var(--text-primary) !important;
-    color: white !important;
+    background: var(--primary) !important;
+    color: var(--primary-fg) !important;
     border: none !important;
-    border-radius: 10px !important;
-    font-weight: 600 !important;
-    padding: 0.5rem 1rem !important;
+    border-radius: var(--radius) !important;
+    font-weight: 700 !important;
+    padding: 0.55rem 1.1rem !important;
     transition: opacity 0.2s;
 }
 section[data-testid="stSidebar"] .stButton > button:hover {
-    opacity: 0.85;
+    opacity: 0.88;
 }
 
-/* KPI cards */
+/* ─── KPI cards ─── */
 .kpi-row {
     display: flex;
-    gap: 14px;
+    gap: 12px;
     margin-bottom: 1.2rem;
     flex-wrap: wrap;
 }
 .kpi-card {
     flex: 1;
-    min-width: 140px;
+    min-width: 130px;
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 18px 20px;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s, transform 0.2s;
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    transition: border-color 0.2s;
 }
 .kpi-card:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-1px);
+    border-color: var(--primary);
 }
 .kpi-label {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     color: var(--text-muted);
     margin-bottom: 6px;
     font-weight: 600;
 }
 .kpi-value {
-    font-size: 1.7rem;
+    font-size: 1.6rem;
     font-weight: 800;
+    font-family: 'Archivo', sans-serif;
     color: var(--text-primary);
     line-height: 1.1;
 }
+.kpi-value small {
+    font-size: 0.55em;
+    color: var(--text-muted);
+    font-weight: 500;
+}
 .kpi-sub {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: var(--text-secondary);
-    margin-top: 4px;
+    margin-top: 5px;
+}
+.kpi-delta {
+    font-size: 0.72rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    margin-top: 3px;
 }
 
-/* Category badges */
+/* ─── Category badges ─── */
 .cat-badge {
     display: inline-block;
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     font-weight: 600;
     letter-spacing: 0.04em;
     padding: 3px 10px;
     border-radius: 999px;
     text-transform: uppercase;
 }
-.cat-outdoor { background: #dcfce7; color: #15803d; }
-.cat-indoor { background: #fef3c7; color: #b45309; }
-.cat-zwift { background: #dbeafe; color: #1d4ed8; }
+.cat-outdoor { background: rgba(109,181,109,0.18); color: var(--accent); }
+.cat-indoor  { background: rgba(196,135,58,0.18); color: var(--primary); }
+.cat-zwift   { background: rgba(91,160,196,0.18); color: var(--chart-4); }
 
-/* Section header */
+/* ─── Section header ─── */
 .section-header {
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 700;
+    font-family: 'Archivo', sans-serif;
     color: var(--text-primary);
     margin: 1.8rem 0 0.8rem;
     display: flex;
     align-items: center;
     gap: 8px;
 }
+.section-kicker {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 2px;
+}
 
-/* Hide Streamlit branding */
-#MainMenu, footer, header {visibility: hidden;}
+/* ─── Hide Streamlit branding ─── */
+#MainMenu, footer, header { visibility: hidden; }
 
-/* Tab styling */
+/* ─── Tab styling ─── */
 .stTabs [data-baseweb="tab-list"] {
     gap: 0;
     background: var(--bg-card);
-    border-radius: 12px;
+    border-radius: var(--radius);
     padding: 4px;
     border: 1px solid var(--border);
-    box-shadow: var(--shadow-sm);
 }
 .stTabs [data-baseweb="tab"] {
-    border-radius: 9px;
+    border-radius: calc(var(--radius) - 2px);
     font-weight: 600;
-    font-size: 0.82rem;
-    padding: 8px 18px;
-    color: var(--text-secondary);
+    font-size: 0.8rem;
+    padding: 8px 16px;
+    color: var(--text-muted);
 }
 .stTabs [aria-selected="true"] {
-    background: var(--text-primary) !important;
-    color: white !important;
+    background: var(--primary) !important;
+    color: var(--primary-fg) !important;
+}
+.stTabs [data-baseweb="tab-highlight"] {
+    background: transparent !important;
+}
+.stTabs [data-baseweb="tab-border"] {
+    background: transparent !important;
 }
 
-/* General buttons */
+/* ─── General buttons ─── */
 .stButton > button {
-    border-radius: 10px !important;
+    border-radius: var(--radius) !important;
     font-weight: 600 !important;
     border: 1px solid var(--border) !important;
-    background: white !important;
+    background: var(--bg-card) !important;
     color: var(--text-primary) !important;
     transition: all 0.2s;
 }
 .stButton > button:hover {
-    background: #f8fafc !important;
-    box-shadow: var(--shadow-sm);
+    border-color: var(--primary) !important;
+    background: var(--bg-muted) !important;
 }
 
-/* Dataframe styling */
+/* ─── Dataframe ─── */
 .stDataFrame {
-    border-radius: 12px;
+    border-radius: var(--radius);
     overflow: hidden;
     border: 1px solid var(--border);
 }
 
-/* Training plan card */
+/* ─── Training plan card ─── */
 .plan-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: var(--radius);
     padding: 16px 20px;
     margin-bottom: 10px;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s;
+    transition: border-color 0.2s;
 }
-.plan-card:hover { box-shadow: var(--shadow-md); }
-.plan-card.done { opacity: 0.55; border-left: 4px solid var(--accent-green); }
-.plan-card.today { border-left: 4px solid var(--accent-orange); background: #fff7ed; }
+.plan-card:hover { border-color: var(--primary); }
+.plan-card.done  { opacity: 0.55; border-left: 4px solid var(--accent); }
+.plan-card.today { border-left: 4px solid var(--primary); background: rgba(196,135,58,0.08); }
 .plan-card.future { border-left: 4px solid var(--border); }
 
-/* Progress bar */
+/* ─── Progress bar ─── */
 .stProgress > div > div {
-    background: var(--accent-orange) !important;
+    background: var(--primary) !important;
+    border-radius: 4px;
+}
+.stProgress > div {
+    background: var(--bg-muted) !important;
+    border-radius: 4px;
 }
 
-/* Metric styling */
+/* ─── Metric styling ─── */
 [data-testid="stMetric"] {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: var(--radius);
     padding: 14px 18px;
-    box-shadow: var(--shadow-sm);
 }
 [data-testid="stMetricLabel"] {
     color: var(--text-muted) !important;
@@ -274,45 +319,174 @@ section[data-testid="stSidebar"] .stButton > button:hover {
 [data-testid="stMetricValue"] {
     color: var(--text-primary) !important;
     font-weight: 800 !important;
+    font-family: 'Archivo', sans-serif !important;
+}
+[data-testid="stMetricDelta"] {
+    font-family: 'JetBrains Mono', monospace !important;
 }
 
-/* Expander styling */
+/* ─── Expander ─── */
 .streamlit-expanderHeader {
     background: var(--bg-card) !important;
-    border-radius: 12px !important;
+    border-radius: var(--radius) !important;
     border: 1px solid var(--border) !important;
     color: var(--text-primary) !important;
     font-weight: 600 !important;
 }
+details {
+    background: var(--bg-card) !important;
+    border-radius: var(--radius) !important;
+    border: 1px solid var(--border) !important;
+}
 
-/* Plotly overrides */
+/* ─── Plotly ─── */
 .js-plotly-plot .plotly .modebar { display: none !important; }
 
-/* Info boxes */
+/* ─── Alerts / info boxes ─── */
 .stAlert {
-    border-radius: 12px !important;
+    border-radius: var(--radius) !important;
     border: 1px solid var(--border) !important;
+    background: var(--bg-card) !important;
 }
 
-/* Multiselect / selectbox */
+/* ─── Inputs ─── */
 .stMultiSelect > div > div,
 .stSelectbox > div > div {
-    border-radius: 10px !important;
+    border-radius: var(--radius) !important;
+    background: var(--bg-muted) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary) !important;
+}
+.stTextInput input {
+    border-radius: var(--radius) !important;
+    border: 1px solid var(--border) !important;
+    background: var(--bg-muted) !important;
+    color: var(--text-primary) !important;
+}
+.stNumberInput input {
+    background: var(--bg-muted) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    color: var(--text-primary) !important;
 }
 
-/* Text input */
-.stTextInput input {
-    border-radius: 10px !important;
-    border: 1px solid var(--border) !important;
-    background: white !important;
+/* ─── Radio / checkbox ─── */
+.stRadio label, .stCheckbox label {
+    color: var(--text-secondary) !important;
 }
+
+/* ─── Markdown text ─── */
+.stMarkdown, .stMarkdown p, .stCaption {
+    color: var(--text-secondary) !important;
+}
+.stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
+    color: var(--text-primary) !important;
+}
+.stMarkdown strong {
+    color: var(--text-primary) !important;
+}
+
+/* ─── Coach recommendation card ─── */
+.coach-reco {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+.coach-reco::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--ember);
+    border-radius: 4px 0 0 4px;
+}
+.coach-reco .coach-title {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 0.88rem;
+    margin-bottom: 6px;
+}
+.coach-reco .coach-text {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+/* ─── Comparison rows ─── */
+.compare-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-muted);
+    border-radius: calc(var(--radius) - 2px);
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+}
+.compare-row .label { color: var(--text-secondary); }
+.compare-row .value {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+}
+
+/* ─── Score ring ─── */
+.score-ring {
+    text-align: center;
+    padding: 20px;
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+.score-ring .score-value {
+    font-size: 3.2rem;
+    font-weight: 800;
+    font-family: 'Archivo', sans-serif;
+    background: var(--ember);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.score-ring .score-label {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* ─── File uploader ─── */
+[data-testid="stFileUploader"] {
+    background: var(--bg-muted) !important;
+    border: 1px dashed var(--border) !important;
+    border-radius: var(--radius) !important;
+}
+[data-testid="stFileUploader"] label {
+    color: var(--text-secondary) !important;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 </style>
 """, unsafe_allow_html=True)
 
 # ───────────────────────── Sidebar — Réglages ─────────────────────────
 with st.sidebar:
-    st.markdown("## 🚵 Gravel Analytics")
-    st.caption("Dashboard vélo gravel · indoor & outdoor")
+    st.markdown("""
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#c4873a,#d4b74a);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;color:#1a1612;font-family:'Archivo',sans-serif;">G</div>
+        <div>
+            <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:1.05rem;color:#f0ece8;line-height:1.2;">Gravel Coach</div>
+            <div style="font-size:0.68rem;color:#8a8279;letter-spacing:0.04em;">Performance · Indoor & Outdoor</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("")  # spacer
 
     st.markdown("### Profil")
     ftp = st.number_input("FTP (watts)", 100, 500, int(st.session_state.get("ftp", 250)), step=5, key="ftp_input")
@@ -459,14 +633,19 @@ with st.sidebar:
         conn.close()
 
     st.markdown("---")
-    st.caption("v3.0 · Gravel Performance Coach")
+    st.caption("v4.0 · Gravel Coach")
 
 # ───────────────────────── Load data ─────────────────────────
 df = db.load_activities_df()
 
 if df.empty:
-    st.markdown("## Bienvenue sur Gravel Analytics 🚵")
-    st.info("Synchronise tes données Garmin Connect via la barre latérale pour commencer l'analyse.")
+    st.markdown("""
+    <div style="text-align:center;padding:60px 20px;">
+        <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#c4873a,#d4b74a);display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:1.8rem;color:#1a1612;font-family:'Archivo',sans-serif;margin-bottom:16px;">G</div>
+        <h2 style="font-family:'Archivo',sans-serif;font-weight:800;color:var(--text-primary);margin:0 0 8px;">Bienvenue sur Gravel Coach</h2>
+        <p style="color:var(--text-muted);font-size:0.95rem;">Synchronise tes données Garmin Connect ou importe un fichier FIT/GPX/TCX via la barre latérale pour commencer.</p>
+    </div>
+    """, unsafe_allow_html=True)
     st.stop()
 
 # Ensure category column exists (backward compat)
@@ -494,16 +673,17 @@ n_outdoor = len(df_outdoor)
 n_indoor = len(df_indoor)
 n_zwift = len(df_zwift)
 
-# ───────────────────────── Plotly theme ─────────────────────────
+# ───────────────────────── Plotly theme — Dark Gravel ─────────────────────────
 PLOTLY_BASE = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="Inter, sans-serif", color="#334155", size=12),
+    font=dict(family="Hind, sans-serif", color="#b5ada5", size=12),
     margin=dict(l=40, r=20, t=30, b=40),
-    hoverlabel=dict(bgcolor="#ffffff", bordercolor="#e2e8f0", font_size=12, font_family="Inter", font_color="#0f172a"),
+    hoverlabel=dict(bgcolor="#38322d", bordercolor="#4d453e", font_size=12,
+                    font_family="Hind", font_color="#f0ece8"),
 )
-_GRID = "rgba(0,0,0,0.06)"
-_LEGEND = dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11, color="#64748b"))
+_GRID = "rgba(255,255,255,0.06)"
+_LEGEND = dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11, color="#8a8279"))
 
 
 def plotly_layout(**overrides):
@@ -515,10 +695,11 @@ def plotly_layout(**overrides):
     layout.update(overrides)
     return layout
 
-COL_OUTDOOR = "#16a34a"
-COL_INDOOR = "#ea580c"
-COL_ZWIFT = "#2563eb"
-COL_ACCENT = "#7c3aed"
+# Palette Gravel Coach
+COL_OUTDOOR = "#6db56d"   # accent green
+COL_INDOOR = "#c4873a"    # primary amber
+COL_ZWIFT = "#5ba0c4"     # blue
+COL_ACCENT = "#d4783a"    # orange-rust
 
 # ───────────────────────── KPI row ─────────────────────────
 total_dist = df["distance_km"].sum()
@@ -526,6 +707,17 @@ total_elev = df["elevation_gain_m"].sum()
 total_time = df["duration_h"].sum()
 avg_power = df["avg_power_w"].mean() if df["avg_power_w"].notna().any() else 0
 avg_wpkg = df["watts_per_kg"].mean() if "watts_per_kg" in df and df["watts_per_kg"].notna().any() else 0
+
+# ── Page title (Lovable-style kicker + greeting) ──
+_today_str = dt.date.today().strftime("%A %d %B %Y").capitalize()
+st.markdown(f"""
+<div style="margin-bottom:0.6rem;">
+    <div class="section-kicker">{_today_str}</div>
+    <h2 style="font-family:'Archivo',sans-serif;font-weight:800;color:var(--text-primary);margin:0;font-size:1.5rem;">
+        Tableau de bord
+    </h2>
+</div>
+""", unsafe_allow_html=True)
 
 kpi_html = f"""
 <div class="kpi-row">
@@ -539,19 +731,19 @@ kpi_html = f"""
   </div>
   <div class="kpi-card">
     <div class="kpi-label">Distance</div>
-    <div class="kpi-value">{total_dist:,.0f} <small style="font-size:0.6em">km</small></div>
+    <div class="kpi-value">{total_dist:,.0f} <small>km</small></div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">Dénivelé</div>
-    <div class="kpi-value">{total_elev:,.0f} <small style="font-size:0.6em">m</small></div>
+    <div class="kpi-value">{total_elev:,.0f} <small>m</small></div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">Temps total</div>
-    <div class="kpi-value">{total_time:,.0f} <small style="font-size:0.6em">h</small></div>
+    <div class="kpi-value">{total_time:,.0f} <small>h</small></div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">Puissance moy.</div>
-    <div class="kpi-value">{avg_power:.0f} <small style="font-size:0.6em">W</small></div>
+    <div class="kpi-value">{avg_power:.0f} <small>W</small></div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">W/kg moyen</div>
@@ -564,8 +756,8 @@ st.markdown(kpi_html, unsafe_allow_html=True)
 
 # ───────────────────────── Main tabs ─────────────────────────
 tab_perf, tab_indoor, tab_compare, tab_rides, tab_ride_detail, tab_plan, tab_coach = st.tabs([
-    "📊 Performance", "🏠 Indoor / Zwift", "⚖️ Indoor vs Outdoor",
-    "📋 Sorties", "🔬 Analyse de sortie", "📅 Plan d'entraînement", "🧠 Coach IA"
+    "Performance", "Indoor", "Comparaison",
+    "Activités", "Analyse", "Plan", "Coach IA"
 ])
 
 # ═══════════════════════════ TAB 1 — Performance ═══════════════════════════
@@ -584,8 +776,8 @@ with tab_perf:
                                          line=dict(color=COL_INDOOR, width=2)))
             fig_pmc.add_trace(go.Scatter(x=pmc["date"], y=pmc["tsb"], name="TSB (Forme)",
                                          line=dict(color=COL_ACCENT, width=2), fill="tozeroy",
-                                         fillcolor="rgba(124,58,237,0.08)"))
-            fig_pmc.add_hline(y=0, line_dash="dash", line_color="rgba(0,0,0,0.15)")
+                                         fillcolor="rgba(212,120,58,0.10)"))
+            fig_pmc.add_hline(y=0, line_dash="dash", line_color="rgba(255,255,255,0.12)")
             fig_pmc.update_layout(**plotly_layout(height=340, legend=dict(orientation="h", y=1.12, bgcolor="rgba(0,0,0,0)")))
             st.plotly_chart(fig_pmc, use_container_width=True)
         else:
@@ -629,7 +821,7 @@ with tab_perf:
             x=pc_df["duration_s"], y=pc_df["power_w"],
             mode="lines", name="Best power",
             line=dict(color=COL_ACCENT, width=2.5),
-            fill="tozeroy", fillcolor="rgba(124,58,237,0.08)",
+            fill="tozeroy", fillcolor="rgba(212,120,58,0.10)",
         ))
         fig_pc.update_xaxes(type="log", title="Durée (s)",
                             tickvals=[5, 10, 30, 60, 300, 600, 1200, 3600],
@@ -1050,7 +1242,7 @@ with tab_plan:
             elif day["environment"] == "outdoor":
                 env_badge = '<span class="cat-badge cat-outdoor">Outdoor</span>'
             else:
-                env_badge = '<span class="cat-badge" style="background:#f1f5f9;color:#64748b;">Repos</span>'
+                env_badge = '<span class="cat-badge" style="background:var(--bg-muted);color:var(--text-muted);">Repos</span>'
 
             dur_txt = f" · {day['duration_min']}min" if day["duration_min"] > 0 else ""
 
@@ -1075,9 +1267,9 @@ with tab_plan:
         rest_count = sum(1 for d in plan["days"] if d["environment"] == "rest")
 
         st.markdown(f"""
-        <div style="margin-top:16px;padding:14px 18px;background:var(--bg-card);border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow-sm);">
-            <span style="font-weight:700;color:var(--text-primary);">📊 Résumé de la semaine</span>
-            <span style="color:var(--text-secondary);margin-left:12px;">
+        <div style="margin-top:16px;padding:14px 18px;background:var(--bg-card);border-radius:var(--radius);border:1px solid var(--border);">
+            <span style="font-weight:700;font-family:'Archivo',sans-serif;color:var(--text-primary);">Résumé de la semaine</span>
+            <span style="color:var(--text-secondary);margin-left:12px;font-family:'JetBrains Mono',monospace;font-size:0.85rem;">
                 {total_plan_min // 60}h{total_plan_min % 60:02d} total ·
                 {indoor_count} indoor · {outdoor_count} outdoor · {rest_count} repos
             </span>
@@ -1095,27 +1287,27 @@ with tab_coach:
         c_score, c_fitness, c_volume = st.columns(3)
         with c_score:
             st.markdown(f"""
-            <div style="text-align:center;padding:20px;background:var(--bg-card);border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow-sm);">
-                <div style="font-size:3.5rem;font-weight:800;color:var(--accent-orange);">{report.overall_score}</div>
-                <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px;">Score global</div>
+            <div class="score-ring">
+                <div class="score-value">{report.overall_score}</div>
+                <div class="score-label">Score global</div>
             </div>
             """, unsafe_allow_html=True)
         with c_fitness:
             st.markdown(f"""
-            <div style="text-align:center;padding:20px;background:var(--bg-card);border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow-sm);">
+            <div class="score-ring">
                 <div style="font-size:2rem;">{report.fitness_emoji}</div>
-                <div style="font-size:1.1rem;font-weight:700;color:var(--text-primary);">{report.fitness_status}</div>
-                <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;">
+                <div style="font-size:1.1rem;font-weight:700;font-family:'Archivo',sans-serif;color:var(--text-primary);">{report.fitness_status}</div>
+                <div style="font-size:0.78rem;font-family:'JetBrains Mono',monospace;color:var(--text-muted);margin-top:4px;">
                     CTL {f"{report.ctl:.0f}" if report.ctl is not None and report.ctl == report.ctl else 'N/A'} · ATL {f"{report.atl:.0f}" if report.atl is not None and report.atl == report.atl else 'N/A'} · TSB {f"{report.tsb:+.0f}" if report.tsb is not None and report.tsb == report.tsb else 'N/A'}
                 </div>
             </div>
             """, unsafe_allow_html=True)
         with c_volume:
             st.markdown(f"""
-            <div style="text-align:center;padding:20px;background:var(--bg-card);border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow-sm);">
-                <div style="font-size:1.6rem;font-weight:700;color:var(--text-primary);">{report.weekly_hours_avg:.1f}h</div>
-                <div style="font-size:0.78rem;color:var(--text-secondary);">/ semaine · {report.rides_per_week_avg:.1f} sorties</div>
-                <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px;">
+            <div class="score-ring">
+                <div style="font-size:1.6rem;font-weight:700;font-family:'Archivo',sans-serif;color:var(--text-primary);">{report.weekly_hours_avg:.1f}h</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);">/ semaine · {report.rides_per_week_avg:.1f} sorties</div>
+                <div style="font-size:0.78rem;font-family:'JetBrains Mono',monospace;color:var(--text-muted);margin-top:2px;">
                     {report.weekly_km_avg:.0f} km · {report.weekly_elevation_avg:.0f} m D+
                 </div>
             </div>
@@ -1138,8 +1330,8 @@ with tab_coach:
             fig_zones = go.Figure(go.Bar(
                 x=zone_df["Temps (%)"], y=zone_df["Zone"],
                 orientation="h",
-                marker_color=["#16a34a", "#22c55e", "#ea580c", "#7c3aed",
-                              "#dc2626", "#ef4444", "#f87171"][:len(zone_df)],
+                marker_color=["#6db56d", "#8cc98c", "#c4873a", "#d4783a",
+                              "#c45a5a", "#d47070", "#e08888"][:len(zone_df)],
             ))
             fig_zones.update_layout(**plotly_layout(height=220, xaxis_title="% du temps"))
             st.plotly_chart(fig_zones, use_container_width=True)
