@@ -54,9 +54,26 @@ h1, h2, h3, h4, .font-display {
 }
 .stApp { background-color: var(--bg) !important; }
 
-/* Hide Streamlit default elements */
-#MainMenu, header[data-testid="stHeader"], footer,
+/* Hide Streamlit default elements (keep sidebar toggle visible) */
+#MainMenu, footer,
 div[data-testid="stDecoration"] { display: none !important; }
+header[data-testid="stHeader"] {
+    background: transparent !important;
+    border: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+}
+/* Hide the main menu area but keep sidebar expand button */
+header[data-testid="stHeader"] [data-testid="stToolbar"] > div:not(:has([data-testid="stExpandSidebarButton"])) {
+    display: none !important;
+}
+/* Style the sidebar expand button to match theme */
+[data-testid="stExpandSidebarButton"] {
+    color: var(--text-m) !important;
+}
+[data-testid="stExpandSidebarButton"]:hover {
+    color: var(--primary) !important;
+}
 
 /* Reduce padding */
 .main .block-container {
