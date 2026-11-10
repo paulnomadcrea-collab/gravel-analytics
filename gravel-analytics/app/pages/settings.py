@@ -337,16 +337,16 @@ def _run_garmin_sync(email: str, password: str, days: int):
     """Execute Garmin sync with progress feedback."""
     with st.spinner("Connexion à Garmin Connect…"):
         try:
-            from garmin_sync import get_client, fetch_activities
-            from sync import sync_garmin
+            from garmin_sync import get_client
+            from sync import sync_recent
 
-            client = get_client(email, password)
+            client = get_client()
             if client is None:
                 st.error("Échec de la connexion à Garmin Connect. Vérifie tes identifiants.")
                 return
 
             with st.spinner(f"Récupération des activités ({days} jours)…"):
-                sync_garmin(client, days=days)
+                sync_recent(days_back=days, client=client)
                 clear_data_cache()
                 st.success(f"✅ Synchronisation terminée ! Rafraîchis la page pour voir les données.")
                 st.rerun()
