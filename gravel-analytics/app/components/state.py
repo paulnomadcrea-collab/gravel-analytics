@@ -26,7 +26,28 @@ DEFAULTS = {
 
 
 def init_state():
-    """Initialize all session state keys with defaults (idempotent)."""
+    """Initialize all session state keys with defaults, loading profile from DB."""
+    # Load persisted profile from SQLite on first run
+    if "_profile_loaded" not in st.session_state:
+        try:
+            conn = db.get_conn()
+            saved = db.load_rider_profile(conn)
+            conn.close()
+            if saved:
+                _type_map = {
+                    "rider_name": str, "ftp": int, "weight": float,
+                    "hr_rest": int, "hr_max": int, "vo2max": int,
+                }
+                for k, cast in _type_map.items():
+                    if k in saved:
+                        try:
+                            st.session_state[k] = cast(saved[k])
+                        except (ValueError, TypeError):
+                            pass
+        except Exception:
+            pass
+        st.session_state["_profile_loaded"] = True
+
     for key, default in DEFAULTS.items():
         if key not in st.session_state:
             st.session_state[key] = default

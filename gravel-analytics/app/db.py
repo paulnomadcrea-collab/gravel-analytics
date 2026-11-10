@@ -269,6 +269,38 @@ def load_ftp_history():
     return df
 
 
+# ─────────────── Rider profile persistence ───────────────
+
+def _ensure_profile_table(conn: sqlite3.Connection) -> None:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS rider_profile (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        )
+        """
+    )
+    conn.commit()
+
+
+def save_rider_profile(conn: sqlite3.Connection, profile: dict) -> None:
+    """Persist rider profile key/value pairs to SQLite."""
+    _ensure_profile_table(conn)
+    for k, v in profile.items():
+        conn.execute(
+            "INSERT OR REPLACE INTO rider_profile (key, value) VALUES (?, ?)",
+            (k, str(v)),
+        )
+    conn.commit()
+
+
+def load_rider_profile(conn: sqlite3.Connection) -> dict:
+    """Load rider profile from SQLite. Returns {} if nothing saved yet."""
+    _ensure_profile_table(conn)
+    rows = conn.execute("SELECT key, value FROM rider_profile").fetchall()
+    return {row["key"]: row["value"] for row in rows}
+
+
 def next_activity_id(conn: sqlite3.Connection) -> int:
     """Génère un ID unique pour une activité importée par fichier (négatif pour éviter les conflits Garmin/Strava)."""
     row = conn.execute("SELECT MIN(activity_id) FROM activities").fetchone()

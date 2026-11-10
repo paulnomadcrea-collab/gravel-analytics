@@ -85,10 +85,20 @@ def _settings_profile():
         st.session_state["hr_max"] = hr_max
         st.session_state["vo2max"] = vo2max
 
-        # Save FTP to history
+        # Persist profile to SQLite
         try:
+            import datetime as _dt
             conn = db.get_conn()
-            db.save_ftp(conn, ftp)
+            db.save_rider_profile(conn, {
+                "rider_name": name,
+                "ftp": ftp,
+                "weight": weight,
+                "hr_rest": hr_rest,
+                "hr_max": hr_max,
+                "vo2max": vo2max,
+            })
+            # Save FTP to history
+            db.save_ftp(conn, _dt.date.today().isoformat(), float(ftp))
             conn.close()
         except Exception:
             pass
@@ -150,37 +160,6 @@ def _settings_connections():
     if mfa_code and "garmin_mfa_client" in st.session_state:
         if st.button("✅ Valider le code MFA et synchroniser", key="mfa_validate"):
             _run_mfa_sync(mfa_code, garmin_days)
-
-    settings_section_end()
-
-    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
-
-    # ── Strava ──
-    settings_section("Strava",
-                     "Connexion via OAuth 2.0. Nécessite un compte développeur Strava.")
-
-    sc1, sc2 = st.columns(2)
-    with sc1:
-        strava_id = st.text_input("Client ID", value=st.session_state.get("strava_client_id", ""),
-                                  key="settings_strava_id")
-    with sc2:
-        strava_secret = st.text_input("Client Secret", type="password",
-                                      value=st.session_state.get("strava_client_secret", ""),
-                                      key="settings_strava_secret")
-
-    if st.button("🔗 Connecter Strava", key="connect_strava"):
-        if strava_id and strava_secret:
-            st.session_state["strava_client_id"] = strava_id
-            st.session_state["strava_client_secret"] = strava_secret
-            st.info("Redirection vers Strava pour autorisation… (non implémenté en V2 preview)")
-        else:
-            st.warning("Renseigne le Client ID et le Client Secret Strava.")
-
-    st.markdown("""
-    <div style="font-size:0.72rem;color:var(--text-d);margin-top:8px">
-        ⚠️ L'API Strava nécessite un abonnement payant depuis juin 2026.
-    </div>
-    """, unsafe_allow_html=True)
 
     settings_section_end()
 
