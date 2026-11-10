@@ -337,12 +337,19 @@ def _run_garmin_sync(email: str, password: str, days: int):
     """Execute Garmin sync with progress feedback."""
     with st.spinner("Connexion à Garmin Connect…"):
         try:
-            from garmin_sync import get_client
+            import os
+            from garmin_sync import login_step1
             from sync import sync_recent
 
-            client = get_client()
-            if client is None:
-                st.error("Échec de la connexion à Garmin Connect. Vérifie tes identifiants.")
+            # Injecte les credentials saisies dans l'UI pour garmin_sync
+            os.environ["GARMIN_EMAIL"] = email
+            os.environ["GARMIN_PASSWORD"] = password
+
+            status, client, client_state = login_step1()
+            if status == "needs_mfa":
+                st.session_state["garmin_mfa_client"] = client
+                st.session_state["garmin_mfa_state"] = client_state
+                st.warning("⚠️ Authentification MFA requise. Entre le code reçu par SMS/email ci-dessus puis relance la synchro.")
                 return
 
             with st.spinner(f"Récupération des activités ({days} jours)…"):
