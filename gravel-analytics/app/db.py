@@ -1,25 +1,81 @@
 """
-Stockage local des activités synchronisées (SQLite).
+Stockage des activités synchronisées (SQLite local ou Turso cloud).
 
-On met en cache les données Garmin localement pour :
-- éviter de re-télécharger à chaque ouverture du dashboard
-- limiter la fréquence des appels à l'API non-officielle de Garmin
-- garder un historique même si une activité est supprimée côté Garmin
+Turso (cloud SQLite) est utilisé quand TURSO_DB_URL et TURSO_AUTH_TOKEN
+sont définis dans les secrets Streamlit ou les variables d'environnement.
+Sinon, on retombe sur SQLite local (dev).
+
+Mode embedded replica : fichier local comme cache + sync vers Turso cloud.
 """
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 from pathlib import Path
 from typing import Iterable
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "gravel.db"
 
+# ─────────────── Connection factory ───────────────
 
-def get_conn() -> sqlite3.Connection:
+_USE_TURSO: bool | None = None  # cached after first check
+
+
+def _turso_credentials() -> tuple[str, str] | None:
+    """Return (url, token) from Streamlit secrets or env vars, or None."""
+    # Try Streamlit secrets first
+    try:
+        import streamlit as st
+        url = st.secrets.get("TURSO_DB_URL", "")
+        token = st.secrets.get("TURSO_AUTH_TOKEN", "")
+        if url and token:
+            return (url, token)
+    except Exception:
+        pass
+    # Fallback to env vars
+    url = os.environ.get("TURSO_DB_URL", "")
+    token = os.environ.get("TURSO_AUTH_TOKEN", "")
+    if url and token:
+        return (url, token)
+    return None
+
+
+def _is_turso() -> bool:
+    """Check (once) whether Turso credentials are available."""
+    global _USE_TURSO
+    if _USE_TURSO is None:
+        creds = _turso_credentials()
+        if creds is None:
+            _USE_TURSO = False
+        else:
+            try:
+                import libsql_experimental  # noqa: F401
+                _USE_TURSO = True
+            except ImportError:
+                _USE_TURSO = False
+    return _USE_TURSO
+
+
+def get_conn():
+    """Open a DB connection — Turso embedded replica if configured, else local SQLite."""
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+
+    if _is_turso():
+        import libsql_experimental as libsql
+        creds = _turso_credentials()
+        url, token = creds
+        conn = libsql.connect(
+            str(DB_PATH),
+            sync_url=url,
+            auth_token=token,
+        )
+        conn.sync()
+    else:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+
+    # ── Schema creation ──
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS activities (
@@ -103,8 +159,44 @@ def get_conn() -> sqlite3.Connection:
         """
     )
     conn.commit()
+
+    # Sync schema to cloud after creation
+    if _is_turso():
+        conn.sync()
+
     return conn
 
+
+def _sync_if_turso(conn) -> None:
+    """Sync to Turso cloud after writes, if using Turso."""
+    if _is_turso():
+        try:
+            conn.sync()
+        except Exception:
+            pass
+
+
+# ─────────────── Pandas helper ───────────────
+
+def _read_sql(query: str, conn) -> "pd.DataFrame":
+    """Read SQL into a DataFrame, compatible with both sqlite3 and libsql connections."""
+    import pandas as pd
+    try:
+        # Works with sqlite3 connections
+        return pd.read_sql_query(query, conn)
+    except Exception:
+        # Fallback for libsql: execute + build DataFrame manually
+        cursor = conn.execute(query)
+        rows = cursor.fetchall()
+        if not rows:
+            # Get column names from description
+            col_names = [desc[0] for desc in cursor.description] if cursor.description else []
+            return pd.DataFrame(columns=col_names)
+        col_names = [desc[0] for desc in cursor.description]
+        return pd.DataFrame(rows, columns=col_names)
+
+
+# ─────────────── Activity helpers ───────────────
 
 INDOOR_ACTIVITY_TYPES = {
     "virtual_ride", "indoor_cycling", "indoor_biking",
@@ -162,7 +254,7 @@ _ACTIVITY_COLUMNS = [
 ]
 
 
-def upsert_activity(conn: sqlite3.Connection, a: dict) -> None:
+def upsert_activity(conn, a: dict) -> None:
     # S'assurer que source et category sont toujours présents
     if "source" not in a:
         a["source"] = "garmin"
@@ -186,18 +278,20 @@ def upsert_activity(conn: sqlite3.Connection, a: dict) -> None:
         a,
     )
     conn.commit()
+    _sync_if_turso(conn)
 
 
-def upsert_power_curve(conn: sqlite3.Connection, activity_id: int, curve: dict[int, float]) -> None:
+def upsert_power_curve(conn, activity_id: int, curve: dict[int, float]) -> None:
     rows = [(activity_id, dur, watts) for dur, watts in curve.items()]
     conn.executemany(
         "INSERT OR REPLACE INTO power_curve (activity_id, duration_s, power_w) VALUES (?, ?, ?)",
         rows,
     )
     conn.commit()
+    _sync_if_turso(conn)
 
 
-def known_activity_ids(conn: sqlite3.Connection) -> set[int]:
+def known_activity_ids(conn) -> set[int]:
     return {row[0] for row in conn.execute("SELECT activity_id FROM activities")}
 
 
@@ -205,7 +299,7 @@ def load_activities_df():
     import pandas as pd
 
     conn = get_conn()
-    df = pd.read_sql_query("SELECT * FROM activities ORDER BY start_time", conn)
+    df = _read_sql("SELECT * FROM activities ORDER BY start_time", conn)
     conn.close()
     if not df.empty:
         df["start_time"] = pd.to_datetime(df["start_time"])
@@ -217,7 +311,7 @@ def load_best_power_curve():
     import pandas as pd
 
     conn = get_conn()
-    df = pd.read_sql_query(
+    df = _read_sql(
         "SELECT duration_s, MAX(power_w) as power_w FROM power_curve GROUP BY duration_s ORDER BY duration_s",
         conn,
     )
@@ -227,7 +321,7 @@ def load_best_power_curve():
 
 # ─────────────── Phase 1 — ride_files helpers ───────────────
 
-def save_ride_file(conn: sqlite3.Connection, activity_id: int, filename: str,
+def save_ride_file(conn, activity_id: int, filename: str,
                    file_format: str, file_hash: str) -> None:
     """Enregistre un fichier importé dans ride_files (évite les doublons par hash)."""
     import datetime as _dt
@@ -242,9 +336,10 @@ def save_ride_file(conn: sqlite3.Connection, activity_id: int, filename: str,
         (activity_id, filename, file_format, _dt.datetime.now().isoformat(), file_hash),
     )
     conn.commit()
+    _sync_if_turso(conn)
 
 
-def file_already_imported(conn: sqlite3.Connection, file_hash: str) -> bool:
+def file_already_imported(conn, file_hash: str) -> bool:
     """Vérifie si un fichier a déjà été importé (par hash SHA-256)."""
     row = conn.execute("SELECT id FROM ride_files WHERE file_hash = ?", (file_hash,)).fetchone()
     return row is not None
@@ -252,26 +347,27 @@ def file_already_imported(conn: sqlite3.Connection, file_hash: str) -> bool:
 
 # ─────────────── Phase 1 — ftp_history helpers ───────────────
 
-def save_ftp(conn: sqlite3.Connection, date: str, ftp_w: float,
+def save_ftp(conn, date: str, ftp_w: float,
              source: str = "manual", notes: str = "") -> None:
     conn.execute(
         "INSERT INTO ftp_history (date, ftp_w, source, notes) VALUES (?, ?, ?, ?)",
         (date, ftp_w, source, notes),
     )
     conn.commit()
+    _sync_if_turso(conn)
 
 
 def load_ftp_history():
     import pandas as pd
     conn = get_conn()
-    df = pd.read_sql_query("SELECT * FROM ftp_history ORDER BY date", conn)
+    df = _read_sql("SELECT * FROM ftp_history ORDER BY date", conn)
     conn.close()
     return df
 
 
 # ─────────────── Rider profile persistence ───────────────
 
-def _ensure_profile_table(conn: sqlite3.Connection) -> None:
+def _ensure_profile_table(conn) -> None:
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS rider_profile (
@@ -283,8 +379,8 @@ def _ensure_profile_table(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
-def save_rider_profile(conn: sqlite3.Connection, profile: dict) -> None:
-    """Persist rider profile key/value pairs to SQLite."""
+def save_rider_profile(conn, profile: dict) -> None:
+    """Persist rider profile key/value pairs."""
     _ensure_profile_table(conn)
     for k, v in profile.items():
         conn.execute(
@@ -292,16 +388,18 @@ def save_rider_profile(conn: sqlite3.Connection, profile: dict) -> None:
             (k, str(v)),
         )
     conn.commit()
+    _sync_if_turso(conn)
 
 
-def load_rider_profile(conn: sqlite3.Connection) -> dict:
-    """Load rider profile from SQLite. Returns {} if nothing saved yet."""
+def load_rider_profile(conn) -> dict:
+    """Load rider profile. Returns {} if nothing saved yet."""
     _ensure_profile_table(conn)
     rows = conn.execute("SELECT key, value FROM rider_profile").fetchall()
-    return {row["key"]: row["value"] for row in rows}
+    # Use tuple index access for libsql compatibility (no row_factory)
+    return {row[0]: row[1] for row in rows}
 
 
-def next_activity_id(conn: sqlite3.Connection) -> int:
+def next_activity_id(conn) -> int:
     """Génère un ID unique pour une activité importée par fichier (négatif pour éviter les conflits Garmin/Strava)."""
     row = conn.execute("SELECT MIN(activity_id) FROM activities").fetchone()
     min_id = row[0] if row and row[0] is not None else 0
