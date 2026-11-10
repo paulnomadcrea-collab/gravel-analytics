@@ -146,6 +146,11 @@ def _settings_connections():
         mfa_code = st.text_input("Code MFA (si demandé)", key="settings_mfa",
                                  help="Si l'authentification à deux facteurs est activée")
 
+    # ── MFA step 2 : valider le code et lancer la synchro ──
+    if mfa_code and "garmin_mfa_client" in st.session_state:
+        if st.button("✅ Valider le code MFA et synchroniser", key="mfa_validate"):
+            _run_mfa_sync(mfa_code, garmin_days)
+
     settings_section_end()
 
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
@@ -364,3 +369,25 @@ def _run_garmin_sync(email: str, password: str, days: int):
                 st.warning("⚠️ Authentification MFA requise. Entre le code reçu par SMS/email ci-dessus.")
             else:
                 st.error(f"Erreur de synchronisation : {ex}")
+
+
+def _run_mfa_sync(mfa_code: str, days: int):
+    """Complete MFA authentication and run sync."""
+    try:
+        from garmin_sync import login_step2_mfa
+        from sync import sync_recent
+
+        client = st.session_state.pop("garmin_mfa_client")
+        client_state = st.session_state.pop("garmin_mfa_state")
+
+        with st.spinner("Validation du code MFA…"):
+            client = login_step2_mfa(client, client_state, mfa_code)
+
+        with st.spinner(f"Récupération des activités ({days} jours)…"):
+            sync_recent(days_back=days, client=client)
+            clear_data_cache()
+            st.success("✅ Synchronisation terminée ! Rafraîchis la page pour voir les données.")
+            st.rerun()
+
+    except Exception as ex:
+        st.error(f"Erreur MFA : {ex}")
